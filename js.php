@@ -128,6 +128,7 @@ function MergeJavascript($srcFiles, $dstFile, $options = '', $pathsAreRelativeTo
 					if($s === false) {
 						throw new Exception("Unable to read the content of the file '$srcFileFull'");
 					}
+					$s .= "\n";
 					$srcLength += strlen($s);
 					$numSrc++;
 					if(!@file_put_contents($tempFileSrc, $s, FILE_APPEND)) {
