@@ -1917,7 +1917,6 @@ class POEntry {
 			case '/concrete5-cif/singlepages':
 			case '/concrete5-cif/singlepages/page/attributes':
 			case '/concrete5-cif/singlepages/page/attributes/attributekey':
-			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
 			case '/concrete5-cif/pagetypes':
 			case '/concrete5-cif/pages':
 			case '/concrete5-cif/pages/page/attributes':
@@ -1956,8 +1955,8 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey';
-			// Skip this node
-			break;
+				// Skip this node
+				break;
 			case '/concrete5-cif/config':
 			case '/concrete5-cif/stacks/stack/area/block/data/record';
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
@@ -1992,6 +1991,13 @@ class POEntry {
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
 				break;
+			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
+				switch($node->parentNode->getAttribute('handle')) {
+					case 'meta_keywords':
+						self::ReadPageKeywords($filenameRel,  $node->parentNode->parentNode->parentNode->getAttribute('path'), $node, $entries);
+						break;
+				}
+				break;
 			default:
 				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel);
 		}
@@ -2015,6 +2021,27 @@ class POEntry {
 				$entries[$value] = new POEntrySingle($value);
 			}
 			$entries[$value]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
+		}
+	}
+
+	/** Parse a node attribute which contains the keywords for a page.
+	* @param string $filenameRel The relative file name of the xml file being read.
+	* @param string $pageUrl The url of the page for which the keywords are for.
+	* @param DOMNode $node The current node.
+	* @param string $attributeName The name of the attribute.
+	* @param ref array[POEntry] $entries Will be populated with found entries.
+	*/
+	private static function ReadPageKeywords($filenameRel, $pageUrl, $node, &$entries) {
+		$keywords = $node->nodeValue;
+		if(strlen($keywords)) {
+			$comment = "#. Keywords for page $pageUrl";
+			if(array_key_exists($keywords, $entries)) {
+				$entries[$keywords]->Comments[] = $comment;
+			}
+			else {
+				$entries[$keywords] = new POEntrySingle($keywords, array(), array($comment));
+			}
+			$entries[$keywords]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
 		}
 	}
 
