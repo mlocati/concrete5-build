@@ -109,9 +109,10 @@ class OptionsBase {
 	}
 
 	/** Read the command line arguments.
+	* @param bool $checkWebroot Set to true to check if the webroot has been set correctly (default: false)
 	* @throws Exception Throws an Exception in case of parameter errors.
 	*/
-	public static function Initialize() {
+	public static function Initialize($checkWebroot = false) {
 		global $argv;
 		// Let's initialize constant/default values.
 		self::$InitialFolder = getcwd();
@@ -156,6 +157,9 @@ class OptionsBase {
 		if(class_exists('Options') && method_exists('Options', 'ArgumentsRead')) {
 			Options::ArgumentsRead();
 		}
+		if($checkWebroot) {
+			self::GetVersionOfConcrete5();
+		}
 	}
 
 	/** Return the boolean value of a command line option value.
@@ -197,6 +201,42 @@ class OptionsBase {
 			}
 		}
 		return null;
+	}
+
+	/** Retrieves the version of a concrete5 installation.
+	* @throws Exception Throws an Exception in case of errors.
+	* @return string
+	*/
+	public static function GetVersionOfConcrete5() {
+		return self::GetVersionOfConcrete5In(self::$WebrootFolder);
+	}
+
+	/** Retrieves the version of a concrete5 installation given its root folder.
+	* @param string $webroot The path of the webroot containing concrete5.
+	* @throws Exception Throws an Exception in case of errors.
+	* @return string
+	*/
+	public static function GetVersionOfConcrete5In($webroot) {
+		if(!defined('C5_EXECUTE')) {
+			define('C5_EXECUTE', true);
+		}
+		if(!is_dir($webroot)) {
+			throw new Exception($webroot . ' is not the valid concrete5 web root directory (it does not exist).');
+		}
+		if(!is_file($fn = Enviro::MergePath($webroot, 'concrete/config/version.php'))) {
+			throw new Exception($webroot . ' is not the valid concrete5 web root directory (the version file does not exist).');
+		}
+		$fc = Enviro::GetEvaluableContent($fn);
+		@ob_start();
+		$evalued = eval($fc);
+		@ob_end_clean();
+		if($evalued === false) {
+			throw new Exception("Unable to parse the version of CONCRETE5 (file '$fn').");
+		}
+		if(empty($APP_VERSION)) {
+			throw new Exception("Unable to parse the concrete5 version file '$fn'.");
+		}
+		return $APP_VERSION;
 	}
 }
 
@@ -705,5 +745,25 @@ class Enviro {
 			}
 		}
 		return '';
+	}
+
+	/** Gets the content of a php file which may be passed to the eval() function.
+	* @param string $phpFilename The source php file.
+	* @throws Exception Throws an Exception in case of errors.
+	* @return string
+	*/
+	public static function GetEvaluableContent($phpFilename) {
+		$fc = @file_get_contents($phpFilename);
+		if($fc === false) {
+			global $php_errormsg;
+			throw new Exception("Unable to read file '$phpFilename': $php_errormsg");
+		}
+		$fc = str_replace('<?', '<?php', str_replace('<?php', '<?', $fc));
+		$fc = preg_replace('/<\?php\s*=s*/', '<?php echo ', $fc);
+		$p = strpos($fc, $s = '<?php');
+		if($p === false) {
+			throw new Exception("Unable to parse the file '$phpFilename'.");
+		}
+		return trim(substr($fc, $p + strlen($s)));
 	}
 }

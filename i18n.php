@@ -456,7 +456,7 @@ class Interactive {
 			switch(self::AskOption($validOptions)) {
 				case 'C':
 					try {
-						PackageInfo::GetVersionOfConcrete5(Options::$WebrootFolder);
+						Options::GetVersionOfConcrete5();
 					}
 					catch(Exception $x) {
 						Console::Write('Please fix the webroot!');
@@ -466,7 +466,7 @@ class Interactive {
 					break;
 				case 'P':
 					try {
-						PackageInfo::GetVersionOfConcrete5(Options::$WebrootFolder);
+						Options::GetVersionOfConcrete5();
 					}
 					catch(Exception $x) {
 						Console::Write('Please fix the webroot!');
@@ -584,7 +584,7 @@ class Interactive {
 						}
 						else {
 							try {
-								PackageInfo::GetVersionOfConcrete5($r);
+								Options::GetVersionOfConcrete5In($r);
 							}
 							catch(Exception $x) {
 								Console::WriteLine($x->getMessage());
@@ -878,34 +878,6 @@ class PackageInfo {
 		$this->PotName = 'messages.pot';
 	}
 
-	/** Retrieves the version of a concrete5 installation given its root folder.
-	* @param string $webroot The path of the webroot containing concrete5.
-	* @throws Exception Throws an Exception in case of errors.
-	* @return string
-	*/
-	public static function GetVersionOfConcrete5($webroot) {
-		if(!defined('C5_EXECUTE')) {
-			define('C5_EXECUTE', true);
-		}
-		if(!is_dir($webroot)) {
-			throw new Exception($webroot . ' is not the valid concrete5 web root directory (it does not exist).');
-		}
-		if(!is_file($fn = Enviro::MergePath($webroot, 'concrete/config/version.php'))) {
-			throw new Exception($webroot . ' is not the valid concrete5 web root directory (the version file does not exist).');
-		}
-		$fc = self::GetEvaluableContent($fn);
-		@ob_start();
-		$evalued = eval($fc);
-		@ob_end_clean();
-		if($evalued === false) {
-			throw new Exception("Unable to parse the version of CONCRETE5 (file '$fn').");
-		}
-		if(empty($APP_VERSION)) {
-			throw new Exception("Unable to parse the concrete5 version file '$fn'.");
-		}
-		return $APP_VERSION;
-	}
-
 	/** Retrieves the version of a package given the concrete5 root folder and the package name.
 	* @param string $webroot The path of the webroot containing concrete5.
 	* @param string $package The package name.
@@ -916,7 +888,7 @@ class PackageInfo {
 		if(!is_file($fn = Enviro::MergePath($webroot, 'packages', $package, 'controller.php'))) {
 			throw new Exception("'" . $package . "' is not a valid package name ('$fn' not found).");
 		}
-		$fc = "\n" . self::GetEvaluableContent($fn);
+		$fc = "\n" . Enviro::GetEvaluableContent($fn);
 		if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+Package\s*\{/i', $fc, $m)) {
 			throw new Exception("'" . self::$package . "' can't be parsed for a version.");
 		}
@@ -977,7 +949,7 @@ EOT
 			if(is_null($this->ExcludeDirsFromPot)) {
 				$this->ExcludeDirsFromPot = Options::$ExcludeDirsFromPotConcrete5Default;
 			}
-			$this->Version = self::GetVersionOfConcrete5(Options::$WebrootFolder);
+			$this->Version = Options::GetVersionOfConcrete5();
 			$this->DirectoryToPotify = 'concrete';
 			$this->PotFullname = Enviro::MergePath(Options::$WebrootFolder, 'languages/' . $this->PotName);
 			$this->Potfile2root = '..';
@@ -1032,25 +1004,6 @@ EOT
 		return Enviro::MergePath($parent, 'languages', Language::NormalizeCode($language), 'LC_MESSAGES', 'messages.mo');
 	}
 
-	/** Gets the content of a php file which may be passed to the eval() function.
-	* @param string $phpFilename The source php file.
-	* @throws Exception Throws an Exception in case of errors.
-	* @return string
-	*/
-	private static function GetEvaluableContent($phpFilename) {
-		$fc = @file_get_contents($phpFilename);
-		if($fc === false) {
-			global $php_errormsg;
-			throw new Exception("Unable to read file '$phpFilename': $php_errormsg");
-		}
-		$fc = str_replace('<?', '<?php', str_replace('<?php', '<?', $fc));
-		$fc = preg_replace('/<\?php\s*=s*/', '<?php echo ', $fc);
-		$p = strpos($fc, $s = '<?php');
-		if($p === false) {
-			throw new Exception("Unable to parse the file '$phpFilename'.");
-		}
-		return trim(substr($fc, $p + strlen($s)));
-	}
 }
 
 /** Represents a .pot file (and exposes .pot-related functions). */
@@ -1994,7 +1947,7 @@ class POEntry {
 			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
 				switch($node->parentNode->getAttribute('handle')) {
 					case 'meta_keywords':
-						self::ReadPageKeywords($filenameRel,  $node->parentNode->parentNode->parentNode->getAttribute('path'), $node, $entries);
+						self::ReadPageKeywords($filenameRel, $node->parentNode->parentNode->parentNode->getAttribute('path'), $node, $entries);
 						break;
 				}
 				break;
