@@ -16,7 +16,7 @@ class Options extends OptionsBase {
 }
 
 try {
-	Options::Initialize();
+	Options::Initialize(true);
 	if(!Enviro::CheckNodeJS('lessc')) {
 		die(1);
 	}
