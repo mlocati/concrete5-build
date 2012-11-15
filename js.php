@@ -10,25 +10,31 @@ require_once dirname(__FILE__) . '/base.php';
 
 class Options extends OptionsBase {
 	public static $Compress = true;
+	public static $OmitComments = false;
 	protected static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that generates an optimized version of JavaScripts used by the concrete5 core.');
 	}
 	protected static function ShowOptions() {
 		Console::WriteLine('--compress=<yes|no>         if yes (default) the output files will be compressed; use no for debugging');
+		Console::WriteLine('--omit-comments=<yes|no>    if no (default) the output files will contain the initial comment of the first file compressed, if yes it will be omitter');
 	}
 	protected static function ParseArgument($name, $value) {
 		switch($name) {
 			case '--compress':
 				self::$Compress = self::ArgumentToBool($name, $value);
 				return true;
+			case '--omit-comments':
+				self::$OmitComments = self::ArgumentToBool($name, $value);
+				return true;
+				
 		}
 		return false;
 	}
 }
 
 try {
-	Options::Initialize();
+	Options::Initialize(true);
 	if(Options::$Compress && (!Enviro::CheckNodeJS('uglifyjs'))) {
 		die(1);
 	}
@@ -40,11 +46,13 @@ try {
 			'concrete/js/bootstrap/bootstrap.transitions.js',
 			'concrete/js/bootstrap/bootstrap.alert.js'
 		),
-		'concrete/js/bootstrap.js'
+		'concrete/js/bootstrap.js',
+		Options::$OmitComments ? '--no-copyright' : ''
 	);
 	MergeJavascript(
 		'concrete/js/ccm_app/jquery.cookie.js',
-		'concrete/js/jquery.cookie.js'
+		'concrete/js/jquery.cookie.js',
+		Options::$OmitComments ? '--no-copyright' : ''
 	);
 	MergeJavascript(
 		array(
@@ -72,7 +80,7 @@ try {
 			'concrete/js/ccm_app/themes.js'
 		),
 		'concrete/js/ccm.app.js',
-		'--no-seqs'
+		array('--no-seqs', Options::$OmitComments ? '--no-copyright' : '')
 	);
 	if(is_string(Options::$InitialFolder)) {
 		@chdir(Options::$InitialFolder);
