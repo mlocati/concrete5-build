@@ -15,3 +15,7 @@ Launch it `php js.php --help` for help & options.
 ### Requirements: php command line 5.3, gettext tools (namely `xgettext`, `msgmerge` and `msgfmt`) installed and in your $PATH (but the script verifies all the dependencies and suggests how to proceed).
 This shell php script manage localization files (.pot templates, .po translations and .mo compiled translations), for both the concrete5 core and for custom packages.
 Launch it with `php i18n.php --help` for help & options, or with `php i18n.php --interactive` for an interactive session.
+
+# remove-short-tags.php
+### Requirements: php command line 5.1
+This tool is able to create a cloned version of a concrete5 installation, expanding the short tags into long ones (useful when working on a version of concrete5 taken from GitHub).
