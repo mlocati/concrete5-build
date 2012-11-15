@@ -486,6 +486,26 @@ class Enviro {
 		}
 	}
 
+	/** Checks if a path is absolute.
+	* @param string $path
+	* @return boolean
+	*/
+	public static function PathIsAbsolute($path) {
+		if(strlen($path)) {
+			if(($path[0] == '/') || ($path[0] == '\\')) {
+				return true;
+			}
+			switch(Enviro::GetOS()) {
+				case Enviro::OS_WIN:
+					if(strpos($path, ':') !== false) {
+						return true;
+					}
+					break;
+			}
+		}
+		return false;
+	}
+
 	/** Return the system temporary directory (or '' if it can't be found).
 	* @return string
 	* @throws Exception Throws an Exception in case the temporary directory can't be found.
@@ -521,6 +541,60 @@ class Enviro {
 			throw new Exception("Unable to create a temporary file in '$tempFolder': $php_errormsg");
 		}
 		return $tempFile;
+	}
+
+	/** Deletes all the files and subfolders in the specified folder.
+	* @param unknown $folder
+	* @throws Exception Throws an Exception in case of errors.
+	*/
+	public static function EmptyFolder($folder) {
+		self::_emptyFolder($folder, false);
+	}
+
+	private static function _emptyFolder($folder, $delete) {
+		$s = @realpath($folder);
+		if(($s === false) || (!is_dir($s))) {
+			throw new Exception("'" . (($s === false) ? $folder : $s) . "' is not a directory.");
+		}
+		$folder = $s;
+		if(!is_writable($folder)) {
+			throw new Exception("'$folder' is not writable!");
+		}
+		$subFolders = array();
+		$subFiles = array();
+		if(!($hDir = @opendir($folder))) {
+			throw new Exception("Error opening the folder '$folder'.");
+		}
+		while($item = readdir($hDir)) {
+			switch($item) {
+				case '.':
+				case '..':
+					break;
+				default:
+					$fullItem = Enviro::MergePath($folder, $item);
+					if(is_dir($fullItem)) {
+						$subFolders[] = $fullItem;
+					}
+					else {
+						$subFiles[] = $fullItem;
+					}
+					break;
+			}
+		}
+		closedir($hDir);
+		foreach($subFolders as $subFolder) {
+			self::_emptyFolder($subFolder, true);
+		}
+		foreach($subFiles as $subFile) {
+			if(!@unlink($subFile)) {
+				throw new Exception("The file '$subFile' could not be deleted.");
+			}
+		}
+		if($delete) {
+			if(!@rmdir($folder)) {
+				throw new Exception("The folder '$folder' could not be deleted.");
+			}
+		}
 	}
 
 	/** Return the NPM package name for the specified NodeJS command.
