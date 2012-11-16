@@ -52,10 +52,12 @@ class Options extends OptionsBase {
 				}
 				$dir = @realpath($value);
 				if($dir === false) {
-					if(!Enviro::PathIsAbsolute($value)) {
+					if(Enviro::PathIsAbsolute($value)) {
+						$dir = $value;
+					} else {
 						$dir = Enviro::MergePath(Options::$InitialFolder, $value);
 					}
-					if(!@mkdir($dir, null, true)) {
+					if(!@mkdir($dir, 0777, true)) {
 						throw new Exception("Unable to create the folder '$dir'!");
 					}
 					self::$DestinationFolderJustCreated = true;
