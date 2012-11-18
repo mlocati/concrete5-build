@@ -10,14 +10,14 @@ require_once dirname(__FILE__) . '/base.php';
 
 class Options extends OptionsBase {
 	public static $Compress = true;
-	public static $OmitComments = false;
+	public static $OmitComments = true;
 	protected static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that generates an optimized version of JavaScripts used by the concrete5 core.');
 	}
 	protected static function ShowOptions() {
 		Console::WriteLine('--compress=<yes|no>         if yes (default) the output files will be compressed; use no for debugging');
-		Console::WriteLine('--omit-comments=<yes|no>    if no (default) the output files will contain the initial comment of the first file compressed, if yes it will be omitter');
+		Console::WriteLine('--omit-comments=<yes|no>    if no the output files will contain the initial comment of the first file compressed, if yes (default) it will be omitted');
 	}
 	protected static function ParseArgument($name, $value) {
 		switch($name) {
