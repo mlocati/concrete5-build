@@ -9,10 +9,45 @@ if(version_compare(PHP_VERSION, '5.1', '<')) {
 require_once dirname(__FILE__) . '/base.php';
 
 class Options extends OptionsBase {
+	public static $Package;
+	public static $Theme;
 	protected static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that generates .css from .less files, used by the concrete5 core.');
 	}
+	protected static function ShowOptions() {
+		Console::WriteLine('--package=<packagename>     work on a package. If not specified we\'ll work on the concrete5 code. If specified, we\'ll create the .css files for each .less files found under the package folder');
+		Console::WriteLine('--theme=<themename>         work on a theme in the themes folder (if the package if specified we\'ll work on the .less files of the theme of that package).');
+	}
+	protected static function InitializeDefaults() {
+		self::$Package = '';
+		self::$Theme = '';
+	}
+	protected static function ParseArgument($argument, $value) {
+		switch($argument) {
+			case '--package':
+				if(!strlen($value)) {
+					throw new Exception("Argument '$argument' requires a value (the package name).");
+				}
+				if(!Enviro::IsFilenameWithoutPath($value)) {
+					throw new Exception("Argument '$argument' requires a package name (not its path), given '$value'.");
+				}
+				self::$Package = $value;
+				return true;
+			case '--theme':
+				if(!strlen($value)) {
+					throw new Exception("Argument '$argument' requires a value (the package name).");
+				}
+				if(!Enviro::IsFilenameWithoutPath($value)) {
+					throw new Exception("Argument '$argument' requires a theme name (not its path), given '$value'.");
+				}
+				self::$Theme = $value;
+				return true;
+			default:
+				return false;
+		}
+	}
+	
 }
 
 try {
@@ -20,38 +55,66 @@ try {
 	if(!Enviro::CheckNodeJS('lessc')) {
 		die(1);
 	}
-	CreateCSS(
-		'concrete/css/ccm_app/build/jquery.ui.less',
-		'concrete/css/jquery.ui.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/jquery.rating.less',
-		'concrete/css/jquery.rating.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.default.theme.less',
-		'concrete/css/ccm.default.theme.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.dashboard.less',
-		'concrete/css/ccm.dashboard.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.dashboard.1200.less',
-		'concrete/css/ccm.dashboard.1200.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.colorpicker.less',
-		'concrete/css/ccm.colorpicker.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.app.mobile.less',
-		'concrete/css/ccm.app.mobile.css'
-	);
-	CreateCSS(
-		'concrete/css/ccm_app/build/ccm.app.less',
-		'concrete/css/ccm.app.css'
-	);
+	if(!(strlen(Options::$Package) || strlen(Options::$Theme))) {
+		CreateCSS(
+			'concrete/css/ccm_app/build/jquery.ui.less',
+			'concrete/css/jquery.ui.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/jquery.rating.less',
+			'concrete/css/jquery.rating.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.default.theme.less',
+			'concrete/css/ccm.default.theme.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.dashboard.less',
+			'concrete/css/ccm.dashboard.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.dashboard.1200.less',
+			'concrete/css/ccm.dashboard.1200.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.colorpicker.less',
+			'concrete/css/ccm.colorpicker.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.app.mobile.less',
+			'concrete/css/ccm.app.mobile.css'
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.app.less',
+			'concrete/css/ccm.app.css'
+		);
+	}
+	else {
+		if(strlen(Options::$Package)) {
+			$rootForWork = Enviro::MergePath(Options::$WebrootFolder, 'packages', Options::$Package);
+			if(!is_dir($rootForWork)) {
+				throw new Exception("Invalid package '" . Options::$Package . "': couldn't find the folder " . $rootForWork);
+			}
+		}
+		else {
+			$rootForWork = Options::$WebrootFolder;
+		}
+		if(strlen(Options::$Theme)) {
+			$rootForWork = Enviro::MergePath($rootForWork, 'themes', Options::$Theme);
+			if(!is_dir($rootForWork)) {
+				throw new Exception("Invalid theme '" . Options::$Theme . "': couldn't find the folder " . $rootForWork);
+			}
+		}
+		$folderContent = Enviro::GetDirectoryContent($rootForWork, true, '/^[^.]/', '/^[^.].*\.less$/i');
+		foreach($folderContent['filesFull'] as $sourceFile) {
+			CreateCSS(
+				$sourceFile,
+				substr($sourceFile, 0, -strlen('.less')) . '.css',
+				true,
+				false
+			);
+		}
+	}
 	if(is_string(Options::$InitialFolder)) {
 		@chdir(Options::$InitialFolder);
 	}

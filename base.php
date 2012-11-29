@@ -840,4 +840,83 @@ class Enviro {
 		}
 		return trim(substr($fc, $p + strlen($s)));
 	}
+
+	/** Returns the content of a directory.
+	* @param string $dir The directory to read from.
+	* @param bool $recursive Set to true to parse subfolders (matching $dirRXPattern is specified).
+	* @param string $dirRXPattern A regular expression pattern to filter directory names (defaults: exclude directories starting with dot).
+	* @param string $fileRXPattern A regular expression pattern to filter file names (defaults: exclude files starting with dot).
+	* @throws Exception Throws an Exception in case of errors
+	* @return array Returns an array with the following keys:<ul>
+	*	<li>array <b>dirsFull</b>: full name of the sub-directories found</li>
+	*	<li>array <b>dirsRel</b>: relative name of the sub-directories found</li>
+	*	<li>array <b>filesFull</b>: full name of the files found</li>
+	*	<li>array <b>filesRel</b>: relative name of the files found</li>
+	* </ul>
+	*/
+	public static function GetDirectoryContent($dir, $recursive = false, $dirRXPattern = '/^[^.]/', $fileRXPattern = '/^[^.]/') {
+		$dirFull = realpath($dir);
+		if(($dirFull === false) ||(!is_dir($dirFull))) {
+			throw new Exception("Couldn't find the directory $dir");
+		}
+		$result = array('dirsFull' => array(), 'dirsRel' => array(), 'filesFull' => array(), 'filesRel' => array());
+		self::_getDirContent($result, $dirFull, '', $recursive, $dirRXPattern, $fileRXPattern);
+		return $result;
+	}
+
+	/** Helper function for self::GetDirectoryContent
+	* @param array $result
+	* @param string $dirFull
+	* @param string $dirRel
+	* @param bool $recursive
+	* @param string $dirRXPattern
+	* @param string $fileRXPattern
+	* @throws Exception
+	*/
+	private static function _getDirContent(&$result, $dirFull, $dirRel, $recursive, $dirRXPattern, $fileRXPattern) {
+		$recurseInto = array();
+		if(!($hDir = @opendir($dirFull))) {
+			throw new Exception("Couldn't read the directory $dirname");
+		}
+		try {
+			while($item = @readdir($hDir)) {
+				switch($item) {
+					case '.':
+					case '..':
+						break;
+					default:
+						$itemRel = (strlen($dirRel) ? "$dirRel/" : '') . $item;
+						$itemFull = self::MergePath($dirFull, $item);
+						if(is_dir($itemFull)) {
+							if((!strlen($dirRXPattern)) || preg_match($dirRXPattern, $item)) {
+								$result['dirsFull'][] = $itemFull;
+								$result['dirsRel'][] = $itemRel;
+								if($recursive) {
+									$recurseInto[] = array('full' => $itemFull, 'rel' => $itemRel);
+								}
+							}
+						}
+						else {
+							if((!strlen($fileRXPattern)) || preg_match($fileRXPattern, $item)) {
+								$result['filesFull'][] = $itemFull;
+								$result['filesRel'][] = $itemRel;
+							}
+						}
+						break;
+				}
+			}
+			@closedir($hDir);
+			$hDir = null;
+			foreach($recurseInto as $s) {
+				self::_getDirContent($result, $s['full'], $s['rel'], $recursive, $dirRXPattern, $fileRXPattern);
+			}
+		}
+		catch(Exception $x) {
+			if($hDir) {
+				@closedir($hDir);
+				$hDir = null;
+			}
+			throw $x;
+		}
+	}
 }
