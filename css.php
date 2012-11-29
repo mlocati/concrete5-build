@@ -76,7 +76,7 @@ function CreateCSS($srcFiles, $dstFile, $compressed = true, $pathsAreRelativeToR
 	foreach($srcFiles as $srcFile) {
 		$srcFilesFull[] = $pathsAreRelativeToRoot ? Enviro::MergePath(Options::$WebrootFolder, $srcFile) : $srcFile;
 	}
-	$dstFileFull = $pathsAreRelativeToRoot ? Enviro::MergePath(Options::$WebrootFolder, $dstFile) : $srcFile;
+	$dstFileFull = $pathsAreRelativeToRoot ? Enviro::MergePath(Options::$WebrootFolder, $dstFile) : $dstFile;
 	$tempFileSrc = '';
 	$tempFileDst = '';
 	try {
