@@ -47,7 +47,7 @@ class Options extends OptionsBase {
 				self::$Theme = $value;
 				return true;
 			case '--compress':
-				self::$Compress = self::ArgumentToBool($name, $value);
+				self::$Compress = self::ArgumentToBool($argument, $value);
 				return true;
 			default:
 				return false;
