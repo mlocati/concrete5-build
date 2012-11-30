@@ -11,6 +11,7 @@ require_once dirname(__FILE__) . '/base.php';
 class Options extends OptionsBase {
 	public static $Package;
 	public static $Theme;
+	public static $Compress;
 	protected static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that generates .css from .less files, used by the concrete5 core.');
@@ -18,10 +19,12 @@ class Options extends OptionsBase {
 	protected static function ShowOptions() {
 		Console::WriteLine('--package=<packagename>     work on a package. If not specified we\'ll work on the concrete5 code. If specified, we\'ll create the .css files for each .less files found under the package folder');
 		Console::WriteLine('--theme=<themename>         work on a theme in the themes folder (if the package if specified we\'ll work on the .less files of the theme of that package).');
+		Console::WriteLine('--compress=<yes|no>         if yes (default) the output files will be compressed; use no for debugging');
 	}
 	protected static function InitializeDefaults() {
 		self::$Package = '';
 		self::$Theme = '';
+		self::$Compress = true;
 	}
 	protected static function ParseArgument($argument, $value) {
 		switch($argument) {
@@ -43,6 +46,9 @@ class Options extends OptionsBase {
 				}
 				self::$Theme = $value;
 				return true;
+			case '--compress':
+				self::$Compress = self::ArgumentToBool($name, $value);
+				return true;
 			default:
 				return false;
 		}
@@ -58,35 +64,43 @@ try {
 	if(!(strlen(Options::$Package) || strlen(Options::$Theme))) {
 		CreateCSS(
 			'concrete/css/ccm_app/build/jquery.ui.less',
-			'concrete/css/jquery.ui.css'
+			'concrete/css/jquery.ui.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/jquery.rating.less',
-			'concrete/css/jquery.rating.css'
+			'concrete/css/jquery.rating.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.default.theme.less',
-			'concrete/css/ccm.default.theme.css'
+			'concrete/css/ccm.default.theme.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.dashboard.less',
-			'concrete/css/ccm.dashboard.css'
+			'concrete/css/ccm.dashboard.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.dashboard.1200.less',
-			'concrete/css/ccm.dashboard.1200.css'
+			'concrete/css/ccm.dashboard.1200.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.colorpicker.less',
-			'concrete/css/ccm.colorpicker.css'
+			'concrete/css/ccm.colorpicker.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.app.mobile.less',
-			'concrete/css/ccm.app.mobile.css'
+			'concrete/css/ccm.app.mobile.css',
+			Options::$Compress
 		);
 		CreateCSS(
 			'concrete/css/ccm_app/build/ccm.app.less',
-			'concrete/css/ccm.app.css'
+			'concrete/css/ccm.app.css',
+			Options::$Compress
 		);
 	}
 	else {
@@ -110,7 +124,7 @@ try {
 			CreateCSS(
 				$sourceFile,
 				substr($sourceFile, 0, -strlen('.less')) . '.css',
-				true,
+				Options::$Compress,
 				false
 			);
 		}
