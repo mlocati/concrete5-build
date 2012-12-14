@@ -212,6 +212,9 @@ class ShortTagsRemover {
 		}
 		fwrite($hFile, $content);
 		fclose($hFile);
+		if($sourceTimestamp = @filemdate($sourceFilename)) {
+			@touch($sourceFilename, $sourceTimestamp);
+		}
 	}
 	public static function RemoveTagsFromFile($sourceFilename) {
 		if(!is_file($sourceFilename)) {
