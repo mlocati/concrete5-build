@@ -251,7 +251,7 @@ class ToolOptions {
 			}
 		}
 		catch(Exception $x) {
-			Console::WriteLine('This tools require the following gettext functions:', true);
+			Console::WriteLine('This tool requires the following gettext functions:', true);
 			Console::WriteLine(implode(' ', $commands), true);
 			switch(Enviro::GetOS()) {
 				case Enviro::OS_LINUX:
