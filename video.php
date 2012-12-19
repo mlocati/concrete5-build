@@ -4,28 +4,34 @@ require_once dirname(__FILE__) . '/base.php';
 
 $tempFile = '';
 try {
-	if(ToolOptions::$Speed != 1) {
-		Console::Write('Changing video speed... ');
-		$workOn = $tempFile = Enviro::GetTemporaryFileName();
-		$args = array();
-		$args[] = '-ovc copy';
-		$args[] = '-oac copy';
-		$args[] = '-speed ' . ToolOptions::$Speed;
-		$args[] = escapeshellarg(ToolOptions::$SourceFile);
-		$args[] = '-o ' . escapeshellarg($tempFile);
-		Enviro::RunTool('mencoder', $args);
-		Console::WriteLine('ok.');
+	$videoFormats = ToolOptions::GetVideoFormatsToConvert();
+	if(count($videoFormats)) {
+		if(ToolOptions::$Speed != 1) {
+			Console::Write('Changing video speed... ');
+			$workOn = $tempFile = Enviro::GetTemporaryFileName();
+			$args = array();
+			$args[] = '-ovc copy';
+			$args[] = '-oac copy';
+			$args[] = '-speed ' . ToolOptions::$Speed;
+			$args[] = escapeshellarg(ToolOptions::$SourceFile);
+			$args[] = '-o ' . escapeshellarg($tempFile);
+			Enviro::RunTool('mencoder', $args);
+			Console::WriteLine('ok.');
+		}
+		else {
+			$tempFile = '';
+			$workOn = ToolOptions::$SourceFile;
+		}
+		foreach($videoFormats as $format) {
+			Converter::Convert($workOn, $format);
+		}
+		if(strlen($tempFile)) {
+			@unlink($tempFile);
+			$tempFile = '';
+		}
 	}
-	else {
-		$tempFile = '';
-		$workOn = ToolOptions::$SourceFile;
-	}
-	foreach(array(Converter::FORMAT_H264, Converter::FORMAT_WEBM, Converter::FORMAT_THEORA) as $format) {
-		Converter::Convert($workOn, $format);
-	}
-	if(strlen($tempFile)) {
-		@unlink($tempFile);
-		$tempFile = '';
+	if(!is_null(ToolOptions::$PosterAt)) {
+		Converter::Convert(ToolOptions::$SourceFile, Converter::FORMAT_POSTER);
 	}
 	die(0);
 }
@@ -41,6 +47,7 @@ class Converter {
 	const FORMAT_H264 = 'H.264';
 	const FORMAT_WEBM = 'WebM';
 	const FORMAT_THEORA = 'Theora';
+	const FORMAT_POSTER = 'Poster';
 	
 	public static function Convert($workOn, $format) {
 		Console::Write("Creating $format... ");
@@ -71,6 +78,9 @@ class Converter {
 					$args[] = '-acodec libvorbis';
 				}
 				break;
+			case self::FORMAT_POSTER:
+				$args[] = '-f image2 -vframes 1 -r 1 -ss ' . ToolOptions::$PosterAt;
+				break;
 		}
 		if(file_exists($destFile)) {
 			if(!ToolOptions::$Overwrite) {
@@ -78,8 +88,14 @@ class Converter {
 			}
 			$args[] = '-y';
 		}
-		if(ToolOptions::$NoAudio) {
-			$args[] = '-an';
+		switch($format) {
+			case self::FORMAT_POSTER:
+				break;
+			default:
+				if(ToolOptions::$NoAudio) {
+					$args[] = '-an';
+				}
+				break;
 		}
 		$args[] = escapeshellarg($destFile);
 		Enviro::RunTool('ffmpeg', $args);
@@ -93,6 +109,8 @@ class Converter {
 				return 'ogv';
 			case self::FORMAT_H264:
 				return 'mp4';
+			case self::FORMAT_POSTER:
+				return ToolOptions::$PosterFormat;
 		}
 		throw new Exception("Which extension for $format?");
 	}
@@ -104,6 +122,12 @@ class ToolOptions {
 	public static $Speed;
 	public static $NoAudio;
 	public static $Overwrite;
+	public static $PosterAt;
+	public static $PosterFormat;
+	public static $PosterFormatDefault;
+	public static $Skip_H264;
+	public static $Skip_WebM;
+	public static $Skip_Theora;
 
 	public static function ShowIntro() {
 		global $argv;
@@ -116,6 +140,12 @@ class ToolOptions {
 		self::$Speed = 1;
 		self::$NoAudio = false;
 		self::$Overwrite = false;
+		self::$PosterAt = null;
+		self::$PosterFormat = '';
+		self::$PosterFormatDefault = 'png';
+		self::$Skip_H264 = false;
+		self::$Skip_WebM = false;
+		self::$Skip_Theora = false;
 	}
 
 	public static function GetOptions(&$options) {
@@ -124,6 +154,11 @@ class ToolOptions {
 		$options['--speed'] = array('helpValue' => '<num>', 'description' => 'change speed (eg: a value of 0.5 makes the video slower and doubles its duration.');
 		$options['--noaudio'] = array('helpValue' => '<yes|no>', 'description' => 'destination files won\'t have audio tracks.');
 		$options['--overwrite'] = array('helpValue' => '<yes|no>', 'description' => 'overwrite existing files?');
+		$options['--posterat'] = array('helpValue' => '<time>', 'description' => 'the time position where to take the poster (seconds or hh:mm:ss[.xxx])');
+		$options['--posterformat'] = array('helpValue' => '<png|jpg>', 'description' => sprintf('the file format of the poster file (default: $1)', self::$PosterFormatDefault));
+		$options['--skip-h264'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the H264 video file');
+		$options['--skip-webm'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the WebM video file');
+		$options['--skip-theora'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the OGG Theora video file');
 	}
 
 	public static function ParseArgument($argument, $value) {
@@ -158,6 +193,42 @@ class ToolOptions {
 				return true;
 			case '--overwrite':
 				self::$Overwrite = Options::ArgumentToBool($argument, $value);
+				return true;
+			case '--posterat':
+				if(!strlen($value)) {
+					throw new Exception("Argument '$argument' requires a value (the poster time position).");
+				}
+				if(preg_match('/^[0-9]+$/', $value)) {
+					self::$PosterAt = @intval($value);
+				}
+				elseif(preg_match('/^[0-9]+:[0-9][0-9]:[0-9][0-9](\.[0-9]+)?$/', $value)) {
+					self::$PosterAt = $value;
+				}
+				else {
+					throw new Exception("Invalid value for '$argument': $value");
+				}
+				return true;
+			case '--posterformat':
+				if(!strlen($value)) {
+					throw new Exception("Argument '$argument' requires a value (the poster format).");
+				}
+				switch($s = strtolower($value)) {
+					case 'png':
+					case 'jpg':
+						self::$PosterFormat = $s;
+						break;
+					default:
+						throw new Exception("Invalid poster format: $value");
+				}
+				return true;
+			case '--skip-h264':
+				self::$Skip_H264 = Options::ArgumentToBool($argument, $value);
+				return true;
+			case '--skip-webm':
+				self::$Skip_WebM = Options::ArgumentToBool($argument, $value);
+				return true;
+			case '--skip-theora':
+				self::$Skip_Theora = Options::ArgumentToBool($argument, $value);
 				return true;
 		}
 		return false;
@@ -196,7 +267,7 @@ class ToolOptions {
 					die(1);
 			}
 		}
-		if(ToolOptions::$Speed != 1) {
+		if((ToolOptions::$Speed != 1) && count(self::GetVideoFormatsToConvert())) {
 			try {
 				Enviro::RunTool('mencoder', '', array(0, 1));
 			}
@@ -230,5 +301,21 @@ class ToolOptions {
 		if(!is_writable(self::$DestinationFolder)) {
 			throw new Exception('The destination folder is not writable.');
 		}
+		if(!strlen(self::$PosterFormat)) {
+			self::$PosterFormat = self::$PosterFormatDefault;
+		}
+	}
+	public static function GetVideoFormatsToConvert() {
+		$formats = array();
+			if(!self::$Skip_H264) {
+			$formats[] = Converter::FORMAT_H264;
+		}
+		if(!self::$Skip_WebM) {
+			$formats[] = Converter::FORMAT_WEBM;
+		}
+		if(!self::$Skip_Theora) {
+			$formats[] = Converter::FORMAT_THEORA;
+		}
+		return $formats;
 	}
 }
