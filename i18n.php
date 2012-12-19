@@ -1,14 +1,40 @@
 <?php
 define('C5_BUILD', true);
-
-if(version_compare(PHP_VERSION, '5.3', '<')) {
-	Console::WriteLine('Minimum required php version: 5.3, your is ' . PHP_VERSION, true);
-	die(1);
-}
-
+define('PHP_MIN_VERSION', '5.3');
 require_once dirname(__FILE__) . '/base.php';
 
-class Options extends OptionsBase {
+try {
+	if(ToolOptions::$Interactive) {
+		Interactive::ShowMainMenu();
+	}
+	else {
+		Options::CheckWebRoot();
+		foreach(ToolOptions::$Packages as $package) {
+			if($package->CreatePot) {
+				POTFile::CreateNew($package);
+			}
+			if($package->CreatePo) {
+				foreach(ToolOptions::$Languages as $language) {
+					POFile::CreateNew($package, $language);
+				}
+			}
+			if($package->Compile) {
+				foreach(ToolOptions::$Languages as $language) {
+					POFile::Compile($package, $language);
+				}
+			}
+		}
+	}
+	if(is_string(Options::$InitialFolder)) {
+		@chdir(Options::$InitialFolder);
+	}
+	die(0);
+} catch(Exception $x) {
+	DieForException($x);
+}
+
+
+class ToolOptions {
 
 	/** The email address to which translators should report localization bugs.
 	* @var string
@@ -55,7 +81,7 @@ class Options extends OptionsBase {
 	*/
 	private static $InitializeData;
 
-	protected static function InitializeDefaults() {
+	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'andrew@concrete5.org';
 		self::$Indent = self::$IndentDefault = true;
 		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty');
@@ -69,7 +95,7 @@ class Options extends OptionsBase {
 		);
 	}
 
-	protected static function ShowIntro() {
+	public static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that helps extracting localizable strings from concrete5 and/or from packages.');
 		Console::WriteLine();
@@ -85,25 +111,22 @@ class Options extends OptionsBase {
 		Console::WriteLine('For more information about gettext: http://www.gnu.org/software/gettext/manual/gettext.html');
 	}
 
-	protected static function ShowOptions() {
-		Console::WriteLine('--list-languages            list all the usable languages');
-		Console::WriteLine('--list-countries            list all the usable countries');
-		Console::WriteLine('--interactive               start an interactive session');
-		Console::WriteLine('--indent=<yes|no>           set to yes to generate indented .pot/.po files, false for not-indented generation (default: ' . (self::$IndentDefault ? 'yes' : 'no') . ')');
-		Console::WriteLine('--languages=<LanguagesCode> list of comma-separated languages for which create the .po files (default: ' . implode(',', Language::GetStandardCodes()) . ')');
-		Console::WriteLine('--package=<packagename>     adds a package. Subsequent arguments are relative to the latest package (or to concrete5 itself to ');
-		Console::WriteLine();
-		Console::WriteLine('For concrete5 and/or each package you can specify specific options. Before the first --package you\'re assigning options to the core of concrete5.');
-		Console::WriteLine('Available package options:');
-		Console::WriteLine('--createpot=<yes|no>        set to yes to generate the .pot file, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
-		Console::WriteLine('--createpo=<yes|no>         set to yes to generate the .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
-		Console::WriteLine('--compile=<yes|no>          set to yes to generate the .mo files from .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
-		Console::WriteLine('--potname=<filename>        name of the .pot filename (just the name, without path: it\'ll be saved in the \'languages\' folder)');
-		Console::WriteLine('--excludedirfrompot=<dir>   folder which may not be parsed when creating a.pot file. To specify multiple values you can specify this argument more than once (default for concrete5: ' . implode(self::$ExcludeDirsFromPotConcrete5Default), ', default for packages: ' . implode(self::$ExcludeDirsFromPotPackageDefault, ', ') . ')');
-		Console::WriteLine('--potcontact=<email>        email address to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
+	public static function GetOptions(&$options) {
+		$options['--list-languages'] = array('description' => 'list all the usable languages');
+		$options['--list-countries'] = array('description' => 'list all the usable countries');
+		$options['--interactive'] = array('description' => 'start an interactive session');
+		$options['--indent'] = array('helpValue' => '<yes|no>', 'description' => 'set to yes to generate indented .pot/.po files, false for not-indented generation (default: ' . (self::$IndentDefault ? 'yes' : 'no') . ')');
+		$options['--languages'] = array('helpValue' => '<LanguagesCode>', 'description' => 'list of comma-separated languages for which create the .po files (default: ' . implode(',', Language::GetStandardCodes()) . ')');
+		$options['--package'] = array('helpValue' => '<packagename>', 'description' => 'adds a package. Subsequent arguments are relative to the latest package (or to concrete5 itself to ');
+		$options['--createpot'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .pot file, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
+		$options['--createpo'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
+		$options['--compile'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .mo files from .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
+		$options['--potname'] = array('helpValue' => '<filename>', 'description' => '(For core and/or each package) name of the .pot filename (just the name, without path: it\'ll be saved in the \'languages\' folder)');
+		$options['--excludedirfrompot'] = array('helpValue' => '<dir>', 'description' => '(For core and/or each package) folder which may not be parsed when creating a.pot file. To specify multiple values you can specify this argument more than once (default for concrete5: ' . implode(self::$ExcludeDirsFromPotConcrete5Default), ', default for packages: ' . implode(self::$ExcludeDirsFromPotPackageDefault, ', ') . ')');
+		$options['--potcontact'] = array('helpValue' => '<email>', 'description' => '(For core and/or each package) email address to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
 	}
 
-	protected static function ShowExamples() {
+	public static function ShowExamples() {
 		global $argv;
 		Console::WriteLine('The simplest: php ' . $argv[0] . ' --interactive');
 		Console::WriteLine('To create the .pot/.po/.mo files for concrete5: php ' . $argv[0]);
@@ -112,7 +135,7 @@ class Options extends OptionsBase {
 		Console::WriteLine('To create the .pot file for concrete5 AND all the files for the package foobar: php ' . $argv[0] . ' --createpot=yes --package=foobar');
 	}
 
-	protected static function ParseArgument($argument, $value) {
+	public static function ParseArgument($argument, $value) {
 		switch($argument) {
 			case '--list-languages':
 				foreach(Language::GetLanguages() as $id => $info) {
@@ -128,7 +151,7 @@ class Options extends OptionsBase {
 				self::$Interactive = true;
 				return true;
 			case '--indent':
-				self::$Indent = self::ArgumentToBool($argument, $value);
+				self::$Indent = Options::ArgumentToBool($argument, $value);
 				return true;
 			case '--package':
 				if(!strlen($value)) {
@@ -155,13 +178,13 @@ class Options extends OptionsBase {
 				}
 				return true;
 			case '--createpot':
-				self::$InitializeData['currentPackage']->CreatePot = self::ArgumentToBool($argument, $value);
+				self::$InitializeData['currentPackage']->CreatePot = Options::ArgumentToBool($argument, $value);
 				return true;
 			case '--createpo':
-				self::$InitializeData['currentPackage']->CreatePo = self::ArgumentToBool($argument, $value);
+				self::$InitializeData['currentPackage']->CreatePo = Options::ArgumentToBool($argument, $value);
 				return true;
 			case '--compile':
-				self::$InitializeData['currentPackage']->Compile = self::ArgumentToBool($argument, $value);
+				self::$InitializeData['currentPackage']->Compile = Options::ArgumentToBool($argument, $value);
 				return true;
 			case '--potname':
 				if(!strlen($value)) {
@@ -211,7 +234,7 @@ class Options extends OptionsBase {
 	/** Checks the environment state.
 	* @throws Exception Throws an Exception in case of errors.
 	*/
-	protected static function ArgumentsRead() {
+	public static function ArgumentsRead() {
 		if(is_null(self::$Languages)) {
 			self::$Languages = Language::GetStandardCodes();
 		}
@@ -245,7 +268,7 @@ class Options extends OptionsBase {
 					Console::Write('There\'s a ready-to-use version on ftp.gnome.org. Would you like me to download it automatically? [Y/n] ', true);
 					if(!Console::AskYesNo(true, true)) {
 						Console::WriteLine('Please put gettext functions in the following folder:', true);
-						Console::WriteLine(self::$Win32ToolsFolder, true);
+						Console::WriteLine(Options::$Win32ToolsFolder, true);
 						die(1);
 					}
 					self::DownloadZip(
@@ -363,36 +386,6 @@ class Options extends OptionsBase {
 	}
 }
 
-try {
-	Options::Initialize();
-	if(Options::$Interactive) {
-		Interactive::ShowMainMenu();
-	}
-	else {
-		foreach(Options::$Packages as $package) {
-			if($package->CreatePot) {
-				POTFile::CreateNew($package);
-			}
-			if($package->CreatePo) {
-				foreach(Options::$Languages as $language) {
-					POFile::CreateNew($package, $language);
-				}
-			}
-			if($package->Compile) {
-				foreach(Options::$Languages as $language) {
-					POFile::Compile($package, $language);
-				}
-			}
-		}
-	}
-	if(is_string(Options::$InitialFolder)) {
-		@chdir(Options::$InitialFolder);
-	}
-	die(0);
-} catch(Exception $x) {
-	DieForException($x);
-}
-
 /** Static class managing the interactive session. */
 class Interactive {
 
@@ -450,13 +443,13 @@ class Interactive {
 			self::ShowEntry($validOptions[] = 'C', 'Work on concrete5 core');
 			self::ShowEntry($validOptions[] = 'P', 'Work on a concrete5 package');
 			self::ShowEntry($validOptions[] = 'W', 'Change webroot', 'Current value: ' . Options::$WebrootFolder);
-			self::ShowEntry($validOptions[] = 'I', 'Change indentation', 'Current value: ' . (Options::$Indent ? 'yes' : 'no'));
-			self::ShowEntry($validOptions[] = 'L', 'Change .po languages', 'Current value: ' . count(Options::$Languages) . ' language' . ((count(Options::$Languages) == 1) ? '' : 's'));
+			self::ShowEntry($validOptions[] = 'I', 'Change indentation', 'Current value: ' . (ToolOptions::$Indent ? 'yes' : 'no'));
+			self::ShowEntry($validOptions[] = 'L', 'Change .po languages', 'Current value: ' . count(ToolOptions::$Languages) . ' language' . ((count(ToolOptions::$Languages) == 1) ? '' : 's'));
 			self::ShowEntry($validOptions[] = 'X', 'Exit');
 			switch(self::AskOption($validOptions)) {
 				case 'C':
 					try {
-						Options::GetVersionOfConcrete5();
+						Options::CheckWebroot();
 					}
 					catch(Exception $x) {
 						Console::Write('Please fix the webroot!');
@@ -466,7 +459,7 @@ class Interactive {
 					break;
 				case 'P':
 					try {
-						Options::GetVersionOfConcrete5();
+						Options::CheckWebroot();
 					}
 					catch(Exception $x) {
 						Console::Write('Please fix the webroot!');
@@ -609,7 +602,7 @@ class Interactive {
 								Console::WriteLine('Invalid value!');
 							}
 							else {
-								Options::$Indent = $b;
+								ToolOptions::$Indent = $b;
 								break;
 							}
 						}
@@ -653,11 +646,11 @@ class Interactive {
 					}
 					break;
 				case 'P':
-					if(empty(Options::$Languages)) {
+					if(empty(ToolOptions::$Languages)) {
 						Console::WriteLine('No languages to create/update .po files for!');
 					}
 					else {
-						foreach(Options::$Languages as $language) {
+						foreach(ToolOptions::$Languages as $language) {
 							try {
 								POFile::CreateNew($packageInfo, $language);
 							}
@@ -671,11 +664,11 @@ class Interactive {
 					}
 					break;
 				case 'C':
-					if(empty(Options::$Languages)) {
+					if(empty(ToolOptions::$Languages)) {
 						Console::WriteLine('No languages to create .mo files for!');
 					}
 					else {
-						foreach(Options::$Languages as $language) {
+						foreach(ToolOptions::$Languages as $language) {
 							try {
 								POFile::Compile($packageInfo, $language);
 							}
@@ -708,17 +701,17 @@ class Interactive {
 			self::ShowEntry($validOptions[] = 'X', 'back to main menu');
 			switch(self::AskOption($validOptions)) {
 				case '?':
-					if(empty(Options::$Languages)) {
+					if(empty(ToolOptions::$Languages)) {
 						Console::WriteLine('No current languages');
 					}
 					else {
-						foreach(Options::$Languages as $code) {
+						foreach(ToolOptions::$Languages as $code) {
 							Console::WriteLine($code . "\t" . Language::DescribeCode($code));
 						}
 					}
 					break;
 				case 'E':
-					Options::$Languages = array();
+					ToolOptions::$Languages = array();
 					Console::WriteLine('List cleared.');
 					break;
 				case 'A':
@@ -737,9 +730,9 @@ class Interactive {
 						}
 						if(strlen($code)) {
 							$name = Language::DescribeCode($code);
-							if(array_search($code, Options::$Languages) === false) {
-								Options::$Languages[] = $code;
-								sort(Options::$Languages);
+							if(array_search($code, ToolOptions::$Languages) === false) {
+								ToolOptions::$Languages[] = $code;
+								sort(ToolOptions::$Languages);
 								Console::WriteLine('Added language ' . $code . ' - ' . $name);
 							}
 							else {
@@ -764,7 +757,7 @@ class Interactive {
 						}
 						if(strlen($code)) {
 							$name = Language::DescribeCode($code);
-							if(array_search($code, Options::$Languages) === false) {
+							if(array_search($code, ToolOptions::$Languages) === false) {
 								Console::WriteLine($name . ' is not in the current list of languages.');
 							}
 							else {
@@ -869,7 +862,7 @@ class PackageInfo {
 		}
 		else {
 			$this->IsConcrete5 = true;
-			$this->PotContact = Options::$PotContactConcrete5Default;
+			$this->PotContact = ToolOptions::$PotContactConcrete5Default;
 		}
 		$this->ExcludeDirsFromPot = null;
 		$this->CreatePot = null;
@@ -938,16 +931,16 @@ EOT
 		}
 		if($this->IsConcrete5) {
 			if(is_null($this->CreatePot)) {
-				$this->CreatePot = (count(Options::$Packages) == 1) ? true : false;
+				$this->CreatePot = (count(ToolOptions::$Packages) == 1) ? true : false;
 			}
 			if(is_null($this->CreatePo)) {
-				$this->CreatePo = (count(Options::$Packages) == 1) ? true : false;
+				$this->CreatePo = (count(ToolOptions::$Packages) == 1) ? true : false;
 			}
 			if(is_null($this->Compile)) {
-				$this->Compile = (count(Options::$Packages) == 1) ? true : false;
+				$this->Compile = (count(ToolOptions::$Packages) == 1) ? true : false;
 			}
 			if(is_null($this->ExcludeDirsFromPot)) {
-				$this->ExcludeDirsFromPot = Options::$ExcludeDirsFromPotConcrete5Default;
+				$this->ExcludeDirsFromPot = ToolOptions::$ExcludeDirsFromPotConcrete5Default;
 			}
 			$this->Version = Options::GetVersionOfConcrete5();
 			$this->DirectoryToPotify = 'concrete';
@@ -966,7 +959,7 @@ EOT
 				$this->Compile = true;
 			}
 			if(is_null($this->ExcludeDirsFromPot)) {
-				$this->ExcludeDirsFromPot = Options::$ExcludeDirsFromPotPackageDefault;
+				$this->ExcludeDirsFromPot = ToolOptions::$ExcludeDirsFromPotPackageDefault;
 			}
 			$this->Version = self::GetVersionOfPackage(Options::$WebrootFolder, $this->Package);
 			$this->DirectoryToPotify = 'packages/' . $this->Package;
@@ -1081,7 +1074,7 @@ class POTFile {
 					Console::WriteLine('done.');
 				}
 				Console::Write('  Saving .pot file... ');
-				$pot->SaveAs($packageInfo->PotFullname, Options::$Indent);
+				$pot->SaveAs($packageInfo->PotFullname, ToolOptions::$Indent);
 				Console::WriteLine('done.');
 				Console::WriteLine('  .pot file created: ' . $packageInfo->PotFullname);
 				@unlink($tempPot);
@@ -1503,7 +1496,7 @@ class POFile extends POTFile {
 			$poFile->FixHeader($packageInfo, $language);
 			Console::WriteLine('done.');
 			Console::Write('  Saving final .po file... ');
-			$poFile->SaveAs($poFullFilename, Options::$Indent);
+			$poFile->SaveAs($poFullFilename, ToolOptions::$Indent);
 			Console::WriteLine('done.');
 			@unlink($tempPoDst);
 			$tempPoDst = null;

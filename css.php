@@ -1,32 +1,108 @@
 <?php
 define('C5_BUILD', true);
-
-if(version_compare(PHP_VERSION, '5.1', '<')) {
-	Console::WriteLine('Minimum required php version: 5.1, your is ' . PHP_VERSION, true);
-	die(1);
-}
-
 require_once dirname(__FILE__) . '/base.php';
 
-class Options extends OptionsBase {
+try {
+	Options::CheckWebRoot();
+	if(!Enviro::CheckNodeJS('lessc')) {
+		die(1);
+	}
+	if(!(strlen(ToolOptions::$Package) || strlen(ToolOptions::$Theme))) {
+		CreateCSS(
+			'concrete/css/ccm_app/build/jquery.ui.less',
+			'concrete/css/jquery.ui.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/jquery.rating.less',
+			'concrete/css/jquery.rating.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.default.theme.less',
+			'concrete/css/ccm.default.theme.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.dashboard.less',
+			'concrete/css/ccm.dashboard.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.dashboard.1200.less',
+			'concrete/css/ccm.dashboard.1200.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.colorpicker.less',
+			'concrete/css/ccm.colorpicker.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.app.mobile.less',
+			'concrete/css/ccm.app.mobile.css',
+			ToolOptions::$Compress
+		);
+		CreateCSS(
+			'concrete/css/ccm_app/build/ccm.app.less',
+			'concrete/css/ccm.app.css',
+			ToolOptions::$Compress
+		);
+	}
+	else {
+		if(strlen(ToolOptions::$Package)) {
+			$rootForWork = Enviro::MergePath(Options::$WebrootFolder, 'packages', ToolOptions::$Package);
+			if(!is_dir($rootForWork)) {
+				throw new Exception("Invalid package '" . ToolOptions::$Package . "': couldn't find the folder " . $rootForWork);
+			}
+		}
+		else {
+			$rootForWork = Options::$WebrootFolder;
+		}
+		if(strlen(ToolOptions::$Theme)) {
+			$rootForWork = Enviro::MergePath($rootForWork, 'themes', ToolOptions::$Theme);
+			if(!is_dir($rootForWork)) {
+				throw new Exception("Invalid theme '" . ToolOptions::$Theme . "': couldn't find the folder " . $rootForWork);
+			}
+		}
+		$folderContent = Enviro::GetDirectoryContent($rootForWork, true, '/^[^.]/', '/^[^.].*\.less$/i');
+		foreach($folderContent['filesFull'] as $sourceFile) {
+			CreateCSS(
+				$sourceFile,
+				substr($sourceFile, 0, -strlen('.less')) . '.css',
+				ToolOptions::$Compress,
+				false
+			);
+		}
+	}
+	if(is_string(Options::$InitialFolder)) {
+		@chdir(Options::$InitialFolder);
+	}
+	die(0);
+}
+catch(Exception $x) {
+	DieForException($x);
+}
+
+class ToolOptions {
 	public static $Package;
 	public static $Theme;
 	public static $Compress;
-	protected static function ShowIntro() {
+	public static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that generates .css from .less files, used by the concrete5 core.');
 	}
-	protected static function ShowOptions() {
-		Console::WriteLine('--package=<packagename>     work on a package. If not specified we\'ll work on the concrete5 code. If specified, we\'ll create the .css files for each .less files found under the package folder');
-		Console::WriteLine('--theme=<themename>         work on a theme in the themes folder (if the package if specified we\'ll work on the .less files of the theme of that package).');
-		Console::WriteLine('--compress=<yes|no>         if yes (default) the output files will be compressed; use no for debugging');
+	public static function GetOptions(&$options) {
+		$options['--package'] = array('helpValue' => '<packagename>', 'description' => 'work on a package. If not specified we\'ll work on the concrete5 code. If specified, we\'ll create the .css files for each .less files found under the package folder');
+		$options['--theme'] = array('helpValue' => '<themename>', 'description' => 'work on a theme in the themes folder (if the package if specified we\'ll work on the .less files of the theme of that package).');
+		$options['--compress'] = array('helpValue' => '<yes|no>', 'description' => 'if yes (default) the output files will be compressed; use no for debugging');
 	}
-	protected static function InitializeDefaults() {
+	public static function InitializeDefaults() {
 		self::$Package = '';
 		self::$Theme = '';
 		self::$Compress = true;
 	}
-	protected static function ParseArgument($argument, $value) {
+	public static function ParseArgument($argument, $value) {
 		switch($argument) {
 			case '--package':
 				if(!strlen($value)) {
@@ -47,94 +123,12 @@ class Options extends OptionsBase {
 				self::$Theme = $value;
 				return true;
 			case '--compress':
-				self::$Compress = self::ArgumentToBool($argument, $value);
+				self::$Compress = Options::ArgumentToBool($argument, $value);
 				return true;
 			default:
 				return false;
 		}
 	}
-	
-}
-
-try {
-	Options::Initialize(true);
-	if(!Enviro::CheckNodeJS('lessc')) {
-		die(1);
-	}
-	if(!(strlen(Options::$Package) || strlen(Options::$Theme))) {
-		CreateCSS(
-			'concrete/css/ccm_app/build/jquery.ui.less',
-			'concrete/css/jquery.ui.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/jquery.rating.less',
-			'concrete/css/jquery.rating.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.default.theme.less',
-			'concrete/css/ccm.default.theme.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.dashboard.less',
-			'concrete/css/ccm.dashboard.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.dashboard.1200.less',
-			'concrete/css/ccm.dashboard.1200.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.colorpicker.less',
-			'concrete/css/ccm.colorpicker.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.app.mobile.less',
-			'concrete/css/ccm.app.mobile.css',
-			Options::$Compress
-		);
-		CreateCSS(
-			'concrete/css/ccm_app/build/ccm.app.less',
-			'concrete/css/ccm.app.css',
-			Options::$Compress
-		);
-	}
-	else {
-		if(strlen(Options::$Package)) {
-			$rootForWork = Enviro::MergePath(Options::$WebrootFolder, 'packages', Options::$Package);
-			if(!is_dir($rootForWork)) {
-				throw new Exception("Invalid package '" . Options::$Package . "': couldn't find the folder " . $rootForWork);
-			}
-		}
-		else {
-			$rootForWork = Options::$WebrootFolder;
-		}
-		if(strlen(Options::$Theme)) {
-			$rootForWork = Enviro::MergePath($rootForWork, 'themes', Options::$Theme);
-			if(!is_dir($rootForWork)) {
-				throw new Exception("Invalid theme '" . Options::$Theme . "': couldn't find the folder " . $rootForWork);
-			}
-		}
-		$folderContent = Enviro::GetDirectoryContent($rootForWork, true, '/^[^.]/', '/^[^.].*\.less$/i');
-		foreach($folderContent['filesFull'] as $sourceFile) {
-			CreateCSS(
-				$sourceFile,
-				substr($sourceFile, 0, -strlen('.less')) . '.css',
-				Options::$Compress,
-				false
-			);
-		}
-	}
-	if(is_string(Options::$InitialFolder)) {
-		@chdir(Options::$InitialFolder);
-	}
-}
-catch(Exception $x) {
-	DieForException($x);
 }
 
 /** Generate a .css file from one or more .less files.

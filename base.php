@@ -1,9 +1,22 @@
-<?php
+<?php /* Common functions and classes used in build scripts */
+
 defined('C5_BUILD') or die('This script should not be called directly.');
 
-/* Common functions and classes used in build scripts */
-
 SetupIni();
+
+if(!defined('CONSOLE_LINELENGTH')) {
+	define('CONSOLE_LINELENGTH', 80);
+}
+if(!defined('PHP_MIN_VERSION')) {
+	define('PHP_MIN_VERSION', '5.1');
+}
+if(version_compare(PHP_VERSION, PHP_MIN_VERSION, '<')) {
+	Console::WriteLine('Minimum required php version: ' . PHP_MIN_VERSION . ', your is ' . PHP_VERSION, true);
+	die(1);
+}
+
+Options::Initialize();
+
 
 /** Initializes the enviro (error reporting, timezone, …). */
 function SetupIni() {
@@ -37,23 +50,15 @@ function ErrorCatcher($errno, $errstr, $errfile, $errline) {
 */
 function DieForException($exception) {
 	Console::WriteLine($exception->getMessage(), true);
-	if(is_string(OptionsBase::$InitialFolder)) {
-		@chdir(OptionsBase::$InitialFolder);
+	if(is_string(Options::$InitialFolder)) {
+		@chdir(Options::$InitialFolder);
 	}
 	die(($exception->getCode() == 0) ? 1 : $exception->getCode());
 }
 
 
-/** Static class holding options.
-* You can extend it with the following static methods:
-* - InitializeDefaults
-* - ShowIntro
-* - ShowOptions
-* - ShowExamples
-* - ParseArgument
-* - ArgumentsRead
-*/
-class OptionsBase {
+/** Static class holding options. */
+class Options {
 
 	/** The current folder.
 	* @var string
@@ -86,81 +91,136 @@ class OptionsBase {
 	private static function ShowHelp($forInvalidArgs = false) {
 		global $argv;
 		if(!$forInvalidArgs) {
-			if(class_exists('Options') && method_exists('Options', 'ShowIntro')) {
-				Options::ShowIntro();
+			if(class_exists('ToolOptions') && method_exists('ToolOptions', 'ShowIntro')) {
+				ToolOptions::ShowIntro();
 				Console::WriteLine();
 				Console::WriteLine();
 			}
 		}
 		Console::WriteLine('### AVAILABLE OPTIONS');
-		Console::WriteLine('--help                      show this message');
-		Console::WriteLine('--webroot=<path>            set the web root of concrete5 (default: ' . self::$WebrootDefaultFolder . ')');
-		if(class_exists('Options') && method_exists('Options', 'ShowOptions')) {
-			Options::ShowOptions();
+		$options = array();
+		$nameMaxLength = 0;
+		foreach(self::GetOptions() as $name => $info) {
+			if(isset($info['helpValue'])) {
+				$name .= '=' . $info['helpValue'];
+			}
+			$nameMaxLength = max($nameMaxLength, strlen($name));
+			$options[] = array('name' => $name, 'description' => $info['description']);
+		}
+		foreach($options as $option) {
+			Console::Write($option['name'] . str_repeat(' ', 1 + $nameMaxLength - strlen($option['name'])));
+			$still = $option['description'];
+			$usable = CONSOLE_LINELENGTH - 1 - $nameMaxLength - 1;
+			if($usable <= 5) {
+				Console::WriteLine($still);
+			}
+			else {
+				$pre = '';
+				while(strlen($still)) {
+					if(strlen($still) <= $usable) {
+						Console::WriteLine($pre . trim($still));
+						break;
+					}
+					$chunk = substr($still, 0, $usable);
+					$p = strrpos($chunk, ' ');
+					if(($p > 5) && ($p > $usable - 9)) {
+						$chunk = substr($chunk, 0, $p);
+					} 
+					Console::WriteLine($pre . trim($chunk));
+					$still = substr($still, strlen($chunk));
+					if($pre == '') {
+						$pre = str_repeat(' ', 1 + $nameMaxLength);
+					}
+				}
+			}
 		}
 		if(!$forInvalidArgs) {
-			if(class_exists('Options') && method_exists('Options', 'ShowExamples')) {
+			if(class_exists('ToolOptions') && method_exists('ToolOptions', 'ShowExamples')) {
 				Console::WriteLine();
 				Console::WriteLine();
 				Console::WriteLine('### EXAMPLES');
-				Options::ShowExamples();
+				ToolOptions::ShowExamples();
 			}
 		}
 	}
 
+	/** Get the available options.
+	* @return array Returns an array whose keys are the <b>option name</b> and the values are arrays with:<ul>
+	*	<li>string <b>description</b> description [required]</li>
+	*	<li>string <b>helpValue</b> value for option when showing options help [optional]</li>
+	* </ul>
+	*/
+	private static function GetOptions() {
+		$options = array();
+		$options['--help'] = array('description' => 'show the help for this command.');
+		if(!class_exists('ToolOptions') || !property_exists('ToolOptions', 'NeedWebRoot') || ToolOptions::NeedWebRoot) {
+			$options['--webroot'] = array('helpValue' => '<folder>', 'description' => 'set the web root of concrete5 (default: ' . self::$WebrootDefaultFolder . ')');
+		}
+		if(class_exists('ToolOptions') && method_exists('ToolOptions', 'GetOptions')) {
+			ToolOptions::GetOptions($options);
+		}
+		return $options;
+	}
+
 	/** Read the command line arguments.
-	* @param bool $checkWebroot Set to true to check if the webroot has been set correctly (default: false)
 	* @throws Exception Throws an Exception in case of parameter errors.
 	*/
-	public static function Initialize($checkWebroot = false) {
+	public static function Initialize() {
 		global $argv;
-		// Let's initialize constant/default values.
-		self::$InitialFolder = getcwd();
-		self::$BuildFolder = dirname(__FILE__);
-		self::$Win32ToolsFolder = Enviro::MergePath(self::$BuildFolder, 'win32tools');
-		self::$WebrootDefaultFolder = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'web';
-		self::$WebrootFolder = self::$WebrootDefaultFolder;
-		if(class_exists('Options') && method_exists('Options', 'InitializeDefaults')) {
-			Options::InitializeDefaults();
-		}
-		// Let's analyze the command line arguments
-		foreach($argv as $argi => $arg) {
-			if($argi == 0) {
-				continue;
+		try {
+			// Let's initialize constant/default values.
+			self::$InitialFolder = getcwd();
+			self::$BuildFolder = dirname(__FILE__);
+			self::$Win32ToolsFolder = Enviro::MergePath(self::$BuildFolder, 'win32tools');
+			self::$WebrootDefaultFolder = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'web';
+			self::$WebrootFolder = self::$WebrootDefaultFolder;
+			if(class_exists('ToolOptions') && method_exists('ToolOptions', 'InitializeDefaults')) {
+				ToolOptions::InitializeDefaults();
 			}
-			$p = strpos($arg, '=');
-			$name = strtolower(($p === false) ? $arg : substr($arg, 0, $p));
-			$value = ($p === false) ? '' : substr($arg, $p + 1);
-			switch($name) {
-				case '--help':
-					self::ShowHelp();
-					die(0);
-				case '--webroot':
-					if(!strlen($value)) {
-						throw new Exception("Argument '$name' requires a value (a valid path).");
-					}
-					$dir = @realpath($value);
-					if(($dir === false) || (!is_dir($dir))) {
-						throw new Exception("Argument '$name' received an invalid path ('$value').");
-					}
-					self::$WebrootFolder = $dir;
-					break;
-				default:
-					if(!(class_exists('Options') && method_exists('Options', 'ParseArgument') && Options::ParseArgument($name, $value))) {
-						Console::WriteLine("Invalid argument '$name'", true);
-						self::ShowHelp(true);
-						die(1);
-					}
-					break;
+			// Let's analyze the command line arguments
+			foreach($argv as $argi => $arg) {
+				if($argi == 0) {
+					continue;
+				}
+				$p = strpos($arg, '=');
+				$name = strtolower(($p === false) ? $arg : substr($arg, 0, $p));
+				$value = ($p === false) ? '' : substr($arg, $p + 1);
+				switch($name) {
+					case '--help':
+						self::ShowHelp();
+						die(0);
+					case '--webroot':
+						if(!strlen($value)) {
+							throw new Exception("Argument '$name' requires a value (a valid path).");
+						}
+						$dir = @realpath($value);
+						if(($dir === false) || (!is_dir($dir))) {
+							throw new Exception("Argument '$name' received an invalid path ('$value').");
+						}
+						self::$WebrootFolder = $dir;
+						break;
+					default:
+						if(!(class_exists('ToolOptions') && method_exists('ToolOptions', 'ParseArgument') && ToolOptions::ParseArgument($name, $value))) {
+							Console::WriteLine("Invalid argument '$name'", true);
+							self::ShowHelp(true);
+							die(1);
+						}
+						break;
+				}
+			}
+			if(class_exists('ToolOptions') && method_exists('ToolOptions', 'ArgumentsRead')) {
+				ToolOptions::ArgumentsRead();
 			}
 		}
-		if(class_exists('Options') && method_exists('Options', 'ArgumentsRead')) {
-			Options::ArgumentsRead();
-		}
-		if($checkWebroot) {
-			self::GetVersionOfConcrete5();
+		catch(Exception $x) {
+			DieForException($x);
 		}
 	}
+	
+	public static function CheckWebroot() {
+		self::GetVersionOfConcrete5();
+	}
+	
 
 	/** Return the boolean value of a command line option value.
 	* @param string $argumentName The argument name.
@@ -168,7 +228,7 @@ class OptionsBase {
 	* @return boolean
 	* @throws Exception Throws an Exception if the argument value can't be converted to a boolean value.
 	*/
-	protected static function ArgumentToBool($argumentName, $argumentValue) {
+	public static function ArgumentToBool($argumentName, $argumentValue) {
 		$v = @trim($argumentValue);
 		if(!strlen($v)) {
 			throw new Exception("Argument '$argumentName' requires a boolean value (yes or no).");
@@ -184,7 +244,7 @@ class OptionsBase {
 	* @param string $value The value to be analyzed
 	* @return boolean|null
 	*/
-	protected static function StringToBool($value) {
+	public static function StringToBool($value) {
 		$v = @trim($value);
 		if(strlen($v)) {
 			switch(strtolower($v)) {
@@ -720,8 +780,8 @@ class Enviro {
 		return self::Run($command, $arguments, $goodResult, $output);
 	}
 
-	/** Execute a shell command (build-in if *nix; an exe file in the OptionsBase::$Win32ToolsFolder folder or under the PATH in the if we're in Windows).
-	* @param string $command The command to execute (assumes an exe in OptionsBase::$Win32ToolsFolder folder if OS is Windows).
+	/** Execute a shell command (build-in if *nix; an exe file in the Options::$Win32ToolsFolder folder or under the PATH in the if we're in Windows).
+	* @param string $command The command to execute (assumes an exe in Options::$Win32ToolsFolder folder if OS is Windows).
 	* @param string|array $arguments The argument(s) of the program.
 	* @param int|array $goodResult Valid return code(s) of the command (default: 0).
 	* @param out array $output The output from stdout/stderr of the command.
@@ -730,7 +790,7 @@ class Enviro {
 	*/
 	public static function RunTool($command, $arguments = '', $goodResult = 0, &$output = null) {
 		if(self::GetOS() == self::OS_WIN) {
-			$fullname = self::FindPathFor($command, 'exe', OptionsBase::$Win32ToolsFolder);
+			$fullname = self::FindPathFor($command, 'exe', Options::$Win32ToolsFolder);
 			if(!is_file($fullname)) {
 				throw new Exception('The executable file ' . $fullname . ' does not exists.');
 			}

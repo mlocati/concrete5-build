@@ -1,12 +1,5 @@
 <?php
-
 define('C5_BUILD', true);
-
-if(version_compare(PHP_VERSION, '5.1', '<')) {
-	Console::WriteLine('Minimum required php version: 5.1, your is ' . PHP_VERSION, true);
-	die(1);
-}
-
 require_once dirname(__FILE__) . '/base.php';
 
 $sot = ini_get('short_open_tag');
@@ -16,8 +9,24 @@ if(empty($sot)) {
 }
 unset($sot);
 
-class Options extends OptionsBase {
-	
+try {
+	Options::CheckWebRoot();
+	ShortTagsRemover::$IgnoreFilePatterns = array(
+		'%^\.gitignore$%i'
+	);
+	ShortTagsRemover::CreateCopy(Options::$WebrootFolder, ToolOptions::$DestinationFolder, '', true);
+	if(is_string(Options::$InitialFolder)) {
+		@chdir(Options::$InitialFolder);
+	}
+	die(0);
+}
+catch(Exception $x) {
+	DieForException($x);
+}
+
+
+class ToolOptions {
+
 	const BEHAVIOUR_DONTOVERWRITE = 1;
 	const BEHAVIOUR_OVERWRITE = 2;
 	const BEHAVIOUR_RECREATE = 3;
@@ -28,23 +37,23 @@ class Options extends OptionsBase {
 
 	public static $OverwriteBehaviour;
 
-	protected static function ShowIntro() {
+	public static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that replaces all the occurrences of short tags with long tags.');
 	}
 
-	protected static function InitializeDefaults() {
+	public static function InitializeDefaults() {
 		self::$DestinationFolder = '';
 		self::$DestinationFolderJustCreated = false;
 		self::$OverwriteBehaviour = self::BEHAVIOUR_DONTOVERWRITE;
 	}
 
-	protected static function ShowOptions() {
-		Console::WriteLine('--destination=<folder>      where to save the reworked copy of the web files');
-		Console::WriteLine(sprintf('--overwrite-behaviour=<n>    what to do if the destination folder exists: %1$s to abort execution, %2$s to overwrite, %3$s to empty that folder before proceeding.', self::BEHAVIOUR_DONTOVERWRITE, self::BEHAVIOUR_OVERWRITE, self::BEHAVIOUR_RECREATE)); 
+	public static function GetOptions(&$options) {
+		$options['--destination'] = array('helpValue' => '<folder>', 'description' => 'where to save the reworked copy of the web files');
+		$options['--overwrite-behaviour'] = array('helpValue' => '<n>', 'description' => sprintf('what to do if the destination folder exists: %1$s to abort execution, %2$s to overwrite, %3$s to empty that folder before proceeding.', self::BEHAVIOUR_DONTOVERWRITE, self::BEHAVIOUR_OVERWRITE, self::BEHAVIOUR_RECREATE));
 	}
 
-	protected static function ParseArgument($argument, $value) {
+	public static function ParseArgument($argument, $value) {
 		switch($argument) {
 			case '--destination':
 				if(!strlen($value)) {
@@ -88,11 +97,11 @@ class Options extends OptionsBase {
 		}
 	}
 
-	protected static function ArgumentsRead() {
+	public static function ArgumentsRead() {
 		if(!strlen(self::$DestinationFolder)) {
 			throw new Exception('Please specify the destination folder.');
 		}
-		$w = realpath(self::$WebrootFolder);
+		$w = realpath(Options::$WebrootFolder);
 		$d = realpath(self::$DestinationFolder);
 		if($w == $d) {
 			throw new Exception('The source and the destination folder can NOT be the same.');
@@ -103,34 +112,19 @@ class Options extends OptionsBase {
 		if(strpos($d, $w) === 0) {
 			throw new Exception('The webroot folder can NOT be a subfolder of the destination folder.');
 		}
-		if(!Options::$DestinationFolderJustCreated) {
-			switch(Options::$OverwriteBehaviour) {
-				case Options::BEHAVIOUR_OVERWRITE:
+		if(!ToolOptions::$DestinationFolderJustCreated) {
+			switch(ToolOptions::$OverwriteBehaviour) {
+				case ToolOptions::BEHAVIOUR_OVERWRITE:
 					break;
-				case Options::BEHAVIOUR_RECREATE:
-					Console::WriteLine("Emptying '" . Options::$DestinationFolder . "'");
-					Enviro::EmptyFolder(Options::$DestinationFolder);
+				case ToolOptions::BEHAVIOUR_RECREATE:
+					Console::WriteLine("Emptying '" . ToolOptions::$DestinationFolder . "'");
+					Enviro::EmptyFolder(ToolOptions::$DestinationFolder);
 					break;
 				default:
-					throw new Exception("The destination folder '". Options::$DestinationFolder . "' already exists!");
+					throw new Exception("The destination folder '". ToolOptions::$DestinationFolder . "' already exists!");
 			}
 		}
 	}
-}
-
-try {
-	Options::Initialize(true);
-	ShortTagsRemover::$IgnoreFilePatterns = array(
-		'%^\.gitignore$%i'
-	);
-	ShortTagsRemover::CreateCopy(Options::$WebrootFolder, Options::$DestinationFolder, '', true);
-	if(is_string(Options::$InitialFolder)) {
-		@chdir(Options::$InitialFolder);
-	}
-	die(0);
-}
-catch(Exception $x) {
-	DieForException($x);
 }
 
 class ShortTagsRemover {

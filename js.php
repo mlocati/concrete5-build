@@ -1,41 +1,10 @@
 <?php
 define('C5_BUILD', true);
-
-if(version_compare(PHP_VERSION, '5.1', '<')) {
-	Console::WriteLine('Minimum required php version: 5.1, your is ' . PHP_VERSION, true);
-	die(1);
-}
-
 require_once dirname(__FILE__) . '/base.php';
 
-class Options extends OptionsBase {
-	public static $Compress = true;
-	public static $OmitComments = true;
-	protected static function ShowIntro() {
-		global $argv;
-		Console::WriteLine($argv[0] . ' is a tool that generates an optimized version of JavaScripts used by the concrete5 core.');
-	}
-	protected static function ShowOptions() {
-		Console::WriteLine('--compress=<yes|no>         if yes (default) the output files will be compressed; use no for debugging');
-		Console::WriteLine('--omit-comments=<yes|no>    if no the output files will contain the initial comment of the first file compressed, if yes (default) it will be omitted');
-	}
-	protected static function ParseArgument($name, $value) {
-		switch($name) {
-			case '--compress':
-				self::$Compress = self::ArgumentToBool($name, $value);
-				return true;
-			case '--omit-comments':
-				self::$OmitComments = self::ArgumentToBool($name, $value);
-				return true;
-				
-		}
-		return false;
-	}
-}
-
 try {
-	Options::Initialize(true);
-	if(Options::$Compress && (!Enviro::CheckNodeJS('uglifyjs'))) {
+	Options::CheckWebRoot();
+	if(ToolOptions::$Compress && (!Enviro::CheckNodeJS('uglifyjs'))) {
 		die(1);
 	}
 	MergeJavascript(
@@ -47,12 +16,12 @@ try {
 			'concrete/js/bootstrap/bootstrap.alert.js'
 		),
 		'concrete/js/bootstrap.js',
-		Options::$OmitComments ? '--no-copyright' : ''
+		ToolOptions::$OmitComments ? '--no-copyright' : ''
 	);
 	MergeJavascript(
 		'concrete/js/ccm_app/jquery.cookie.js',
 		'concrete/js/jquery.cookie.js',
-		Options::$OmitComments ? '--no-copyright' : ''
+		ToolOptions::$OmitComments ? '--no-copyright' : ''
 	);
 	MergeJavascript(
 		array(
@@ -80,14 +49,44 @@ try {
 			'concrete/js/ccm_app/themes.js'
 		),
 		'concrete/js/ccm.app.js',
-		array('--no-seqs', Options::$OmitComments ? '--no-copyright' : '')
+		array('--no-seqs', ToolOptions::$OmitComments ? '--no-copyright' : '')
 	);
 	if(is_string(Options::$InitialFolder)) {
 		@chdir(Options::$InitialFolder);
 	}
+	die(0);
 }
 catch(Exception $x) {
 	DieForException($x);
+}
+
+class ToolOptions {
+	public static $Compress;
+	public static $OmitComments;
+	public static function InitializeDefaults() {
+		self::$Compress = true;
+		self::$OmitComments = true;
+	}
+	public static function ShowIntro() {
+		global $argv;
+		Console::WriteLine($argv[0] . ' is a tool that generates an optimized version of JavaScripts used by the concrete5 core.');
+	}
+	public static function GetOptions(&$options) {
+		$options['--compress'] = array('helpValue' => '<yes|no>', 'description' => 'if yes (default) the output files will be compressed; use no for debugging');
+		$options['--omit-comments'] = array('helpValue' => '<yes|no>', 'description' => 'if no the output files will contain the initial comment of the first file compressed, if yes (default) it will be omitted');
+	}
+	public static function ParseArgument($name, $value) {
+		switch($name) {
+			case '--compress':
+				self::$Compress = Options::ArgumentToBool($name, $value);
+				return true;
+			case '--omit-comments':
+				self::$OmitComments = Options::ArgumentToBool($name, $value);
+				return true;
+
+		}
+		return false;
+	}
 }
 
 /** Compress one or more javascript files.
@@ -146,7 +145,7 @@ function MergeJavascript($srcFiles, $dstFile, $options = '', $pathsAreRelativeTo
 				$compressMe = $tempFileSrc;
 				break;
 		}
-		if(Options::$Compress) {
+		if(ToolOptions::$Compress) {
 			$tempFileDst = Enviro::GetTemporaryFileName();
 			if(!is_array($options)) {
 				if((!is_string($options)) || ($options === '')) {
@@ -179,7 +178,7 @@ function MergeJavascript($srcFiles, $dstFile, $options = '', $pathsAreRelativeTo
 		if(is_file($dstFileFull)) {
 			@unlink($dstFileFull);
 		}
-		if(Options::$Compress) {
+		if(ToolOptions::$Compress) {
 			if(!@rename($tempFileDst, $dstFileFull)) {
 				throw new Exception("Unable to save the result to '$dstFileFull'");
 			}
