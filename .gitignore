@@ -10,3 +10,6 @@ __MACOSX
 # ignore Eclipse-specific files
 /.settings/
 /.buildpath
+
+# ignore win32 binary tools
+/win32tools/
