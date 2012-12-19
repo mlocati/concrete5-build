@@ -153,7 +153,7 @@ class Options {
 	private static function GetOptions() {
 		$options = array();
 		$options['--help'] = array('description' => 'show the help for this command.');
-		if(!class_exists('ToolOptions') || !property_exists('ToolOptions', 'NeedWebRoot') || ToolOptions::NeedWebRoot) {
+		if(!class_exists('ToolOptions') || !property_exists('ToolOptions', 'NeedWebRoot') || ToolOptions::$NeedWebRoot) {
 			$options['--webroot'] = array('helpValue' => '<folder>', 'description' => 'set the web root of concrete5 (default: ' . self::$WebrootDefaultFolder . ')');
 		}
 		if(class_exists('ToolOptions') && method_exists('ToolOptions', 'GetOptions')) {
@@ -190,6 +190,11 @@ class Options {
 						self::ShowHelp();
 						die(0);
 					case '--webroot':
+						if(class_exists('ToolOptions') && property_exists('ToolOptions', 'NeedWebRoot') && !ToolOptions::$NeedWebRoot) {
+							Console::WriteLine("Invalid argument '$name'", true);
+							self::ShowHelp(true);
+							die(1);
+						}
 						if(!strlen($value)) {
 							throw new Exception("Argument '$name' requires a value (a valid path).");
 						}
