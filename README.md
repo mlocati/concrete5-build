@@ -19,3 +19,7 @@ Launch it with `php i18n.php --help` for help & options, or with `php i18n.php -
 ## remove-short-tags.php
 ### Requirements: php command line 5.1
 This tool is able to create a cloned version of a concrete5 installation, expanding the short tags into long ones (useful when working on a version of concrete5 taken from GitHub).
+
+## video.php
+### Requirements: php command line 5.1
+This tool is able to create video files suitable for the html5 <video> tag.
