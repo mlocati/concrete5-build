@@ -155,7 +155,7 @@ class ToolOptions {
 		$options['--noaudio'] = array('helpValue' => '<yes|no>', 'description' => 'destination files won\'t have audio tracks.');
 		$options['--overwrite'] = array('helpValue' => '<yes|no>', 'description' => 'overwrite existing files?');
 		$options['--posterat'] = array('helpValue' => '<time>', 'description' => 'the time position where to take the poster (seconds or hh:mm:ss[.xxx])');
-		$options['--posterformat'] = array('helpValue' => '<png|jpg>', 'description' => sprintf('the file format of the poster file (default: $1)', self::$PosterFormatDefault));
+		$options['--posterformat'] = array('helpValue' => '<png|jpg>', 'description' => sprintf('the file format of the poster file (default: %s)', self::$PosterFormatDefault));
 		$options['--skip-h264'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the H264 video file');
 		$options['--skip-webm'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the WebM video file');
 		$options['--skip-theora'] = array('helpValue' => '<yes|no>', 'description' => 'skip the creation of the OGG Theora video file');
