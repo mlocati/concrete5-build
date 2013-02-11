@@ -280,12 +280,12 @@ class ToolOptions {
 					self::DownloadZip(
 						'http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-tools-dev_0.18.1.1-1_win32.zip',
 						array(
-							'bin/libgettextlib-0-18-1.dll' => self::$Win32ToolsFolder,
-							'bin/libgettextsrc-0-18-1.dll' => self::$Win32ToolsFolder,
-							'bin/libgcc_s_dw2-1.dll' => self::$Win32ToolsFolder,
-							'bin/xgettext.exe' => self::$Win32ToolsFolder,
-							'bin/msgmerge.exe' => self::$Win32ToolsFolder,
-							'bin/msgfmt.exe' => self::$Win32ToolsFolder
+							'bin/libgettextlib-0-18-1.dll' => Options::$Win32ToolsFolder,
+							'bin/libgettextsrc-0-18-1.dll' => Options::$Win32ToolsFolder,
+							'bin/libgcc_s_dw2-1.dll' => Options::$Win32ToolsFolder,
+							'bin/xgettext.exe' => Options::$Win32ToolsFolder,
+							'bin/msgmerge.exe' => Options::$Win32ToolsFolder,
+							'bin/msgfmt.exe' => Options::$Win32ToolsFolder
 						)
 					);
 					break;
