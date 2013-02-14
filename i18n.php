@@ -999,8 +999,189 @@ EOT
 
 }
 
-/** Represents a .pot file (and exposes .pot-related functions). */
-class POTFile {
+/** Base class for POTFile and POFile. */
+abstract class POxFile {
+
+	/** The file header.
+	* @var POEntrySingle|null
+	*/
+	public $Header;
+	
+	/** The entries in the file.
+	* @var array[POEntry]
+	*/
+	public $Entries;
+
+	/** Reads a .pot/.po from file.
+	* @param string $filename The name of the file to read.
+	* @throws Exception Throws an Exception in case of errors.
+	*/
+	public function __construct($filename) {
+		if(($s = @realpath($filename)) === false) {
+			throw new Exception("Error resolving $filename: does it exists?");
+		}
+		$filename = $s;
+		if(!($lines = @file($filename, FILE_IGNORE_NEW_LINES))) {
+			global $php_errormsg;
+			throw new Exception("Error reading '$filename': $php_errormsg");
+		}
+		try {
+			$this->Header = null;
+			$this->Entries = array();
+			$i = 0;
+			$n = count($lines);
+			while($i < $n) {
+				if($entry = POEntry::GetNextFromLines($lines, $i, $nextStart)) {
+					if((!$this->Header) && empty($this->Entries) && is_a($entry, 'POEntrySingle') && (!strlen($entry->GetMsgId()))) {
+						$this->Header = $entry;
+					}
+					else {
+						$hash = $entry->GetHash();
+						if(array_key_exists($hash, $this->Entries) !== false) {
+							throw new Exception("Duplicated entry:\n" . print_r($this->Entries[$hash]). "\n" . print_r($entry));
+						}
+						$this->Entries[$hash] = $entry;
+					}
+				}
+				$i = $nextStart;
+			}
+		}
+		catch(Exception $x) {
+			throw new Exception("Error reading $filename: " . $x->getMessage());
+		}
+	}
+
+	/** Fix the slash of path the entry loctaion comments (eg from concrete\dispatcher.php to concrete/dispatcher.php) */
+	public function FixFilesSlash() {
+		foreach($this->Entries as $entry) {
+			$entry->FixFilesSlash();
+		}
+	}
+	
+	/** Remove the superfluous i18n at the beginning of comments. */
+	public function FixI18NComments() {
+		foreach($this->Entries as $entry) {
+			$entry->FixI18NComments();
+		}
+	}
+	
+	/** Fix the cr/lf end-of-line terminator in every msgid (required when parsed source files under Windows). */
+	public function Replace_CRLF_LF() {
+		if($this->Header) {
+			$this->Header->Replace_CRLF_LF();
+		}
+		foreach($this->Entries as $entry) {
+			$entry->Replace_CRLF_LF();
+		}
+	}
+	
+	/** Add one/many entries to the entries of this instance.
+	* @param POEntry|array[POEntry] $entries The entry/entries to be merged with this instance.
+	*/
+	public function MergeEntries($entries) {
+		if(is_array($entries)) {
+			foreach($entries as $entry) {
+				$this->MergeEntries($entry);
+			}
+		}
+		else {
+			$hash = $entries->GetHash();
+			if(array_key_exists($hash, $this->Entries)) {
+				$this->Entries[$hash]->MergeWith($entries);
+			}
+			else {
+				$this->Entries[$hash] = $entries;
+			}
+		}
+	}
+
+	/** Save the data to file.
+	* @param string $filename The filename to save the data to (if existing it'll be overwritten).
+	* @param bool $indent Set to true to indent data, false otherwise (default: false).
+	* @throws Exception Throws an exception in case of errors.
+	*/
+	public function SaveAs($filename, $indent = false) {
+		$tempFilename = Enviro::GetTemporaryFileName();
+		try {
+			if(!$hFile = @fopen($tempFilename, 'wb')) {
+				global $php_errormsg;
+				throw new Exception("Error opening '$tempFilename': $php_errormsg");
+			}
+			try {
+				$isFirst = true;
+				if($this->Header) {
+					$this->Header->SaveTo($hFile, $indent);
+					$isFirst = false;
+				}
+				foreach($this->Entries as $entry) {
+					if($isFirst) {
+						$isFirst = false;
+					}
+					else {
+						fwrite($hFile, "\n");
+					}
+					$entry->SaveTo($hFile, $indent);
+				}
+				fflush($hFile);
+			} catch(Exception $x) {
+				@fclose($hFile);
+				throw $x;
+			}
+			fclose($hFile);
+			$dirname = dirname($filename);
+			if(is_file($dirname)) {
+				throw new Exception("we'd like to use the folder '$dirname', but it's a file!");
+			}
+			if(!is_dir($dirname)) {
+				if(!@mkdir($dirname, 0777, true)) {
+					throw new Exception("unable to create the folder '$dirname'!");
+				}
+			}
+			if(!is_writable($dirname)) {
+				throw new Exception("the folder '$dirname' is not writable!");
+			}
+			if(is_file($filename)) {
+				if(!is_writable($filename)) {
+					throw new Exception("the file $filename is not writable!");
+				}
+				if(@unlink($filename) === false) {
+					global $php_errormsg;
+					throw new Exception("error deleting $filename: $php_errormsg");
+				}
+			}
+			if(!@rename($tempFilename, $filename)) {
+				throw new Exception("error renaming from '$tempFilename' to '$filename'!");
+			}
+		} catch(Exception $x) {
+			@unlink($tempFilename);
+			throw $x;
+		}
+	}
+}
+/** Represents a .pot file. */
+class POTFile extends POxFile {
+
+	/** Fixes the content of the header.
+	* @param PackageInfo $packageInfo The info about the package.
+	* @param int|null $timestamp The timestamp of the creation of the .pot file (if null we'll use current server time).
+	* @throws Exception Throws an exception in case of errors.
+	*/
+	public function FixHeader($packageInfo, $timestamp = null) {
+		$this->Header = new POEntrySingle(
+			array(),
+			array(
+				'Project-Id-Version: ' . ($packageInfo->IsConcrete5 ? 'concrete5' : $packageInfo->Package) . ' ' . $packageInfo->Version . '\\n',
+				'Report-Msgid-Bugs-To: ' . $packageInfo->PotContact . '\\n',
+				'POT-Creation-Date: ' . gmdate('Y-m-d H:i', $timestamp ? $timestamp : time()) . '+0000\\n',
+				'MIME-Version: 1.0\\n',
+				'X-Poedit-Basepath: ' . $packageInfo->Potfile2root . '\\n',
+				'X-Poedit-SourceCharset: UTF-8\n',
+				'Content-Type: text/plain; charset=UTF-8\\n',
+				'Content-Transfer-Encoding: 8bit\\n',
+				'Language: \\n'
+			)
+		);
+	}
 
 	/** Create a .pot file starting from sources.
 	* @param PackageInfo $packageInfo The info about the .pot file to be created (it'll be overwritten if already existing).
@@ -1096,7 +1277,7 @@ class POTFile {
 	* @param ref array $items Found files will be appended to this array.
 	* @throws Exception Throws an exception in case of errors.
 	*/
-	protected static function GetFiles($relPath, $extension, &$items, $excludedDirs = array(), $_callback = false) {
+	private static function GetFiles($relPath, $extension, &$items, $excludedDirs = array(), $_callback = false) {
 		global $options;
 		if(!$_callback) {
 			if(is_array($excludedDirs)) {
@@ -1146,188 +1327,10 @@ class POTFile {
 			throw $x;
 		}
 	}
-
-	/** The file header.
-	* @var POEntrySingle|null
-	*/
-	public $Header;
-
-	/** The entries in the file.
-	* @var array[POEntry]
-	*/
-	public $Entries;
-
-	/** Reads a .pot from file.
-	* @param string $filename The name of the file to read.
-	* @throws Exception Throws an Exception in case of errors.
-	*/
-	public function __construct($filename) {
-		if(($s = @realpath($filename)) === false) {
-			throw new Exception("Error resolving $filename: does it exists?");
-		}
-		$filename = $s;
-		if(!($lines = @file($filename, FILE_IGNORE_NEW_LINES))) {
-			global $php_errormsg;
-			throw new Exception("Error reading '$filename': $php_errormsg");
-		}
-		try {
-			$this->Header = null;
-			$this->Entries = array();
-			$i = 0;
-			$n = count($lines);
-			while($i < $n) {
-				if($entry = POEntry::GetNextFromLines($lines, $i, $nextStart)) {
-					if((!$this->Header) && empty($this->Entries) && is_a($entry, 'POEntrySingle') && (!strlen($entry->GetMsgId()))) {
-						$this->Header = $entry;
-					}
-					else {
-						$hash = $entry->GetHash();
-						if(array_key_exists($hash, $this->Entries) !== false) {
-							throw new Exception("Duplicated entry:\n" . print_r($this->Entries[$hash]). "\n" . print_r($entry));
-						}
-						$this->Entries[$hash] = $entry;
-					}
-				}
-				$i = $nextStart;
-			}
-		}
-		catch(Exception $x) {
-			throw new Exception("Error reading $filename: " . $x->getMessage());
-		}
-	}
-
-	/** Fixes the content of the header.
-	* @param PackageInfo $packageInfo The info about the package.
-	* @param int|null $timestamp The timestamp of the creation of the .pot file (if null we'll use current server time).
-	* @throws Exception Throws an exception in case of errors.
-	*/
-	public function FixHeader($packageInfo, $timestamp = null) {
-		$this->Header = new POEntrySingle(
-				array(),
-				array(
-						'Project-Id-Version: ' . ($packageInfo->IsConcrete5 ? 'concrete5' : $packageInfo->Package) . ' ' . $packageInfo->Version . '\\n',
-						'Report-Msgid-Bugs-To: ' . $packageInfo->PotContact . '\\n',
-						'POT-Creation-Date: ' . gmdate('Y-m-d H:i', $timestamp ? $timestamp : time()) . '+0000\\n',
-						'MIME-Version: 1.0\\n',
-						'X-Poedit-Basepath: ' . $packageInfo->Potfile2root . '\\n',
-						'X-Poedit-SourceCharset: UTF-8\n',
-						'Content-Type: text/plain; charset=UTF-8\\n',
-						'Content-Transfer-Encoding: 8bit\\n',
-						'Language: \\n'
-				)
-		);
-	}
-
-	/** Fix the slash of path the entry loctaion comments (eg from concrete\dispatcher.php to concrete/dispatcher.php) */
-	public function FixFilesSlash() {
-		foreach($this->Entries as $entry) {
-			$entry->FixFilesSlash();
-		}
-	}
-
-	/** Remove the superfluous i18n at the beginning of comments. */
-	public function FixI18NComments() {
-		foreach($this->Entries as $entry) {
-			$entry->FixI18NComments();
-		}
-	}
-
-	/** Fix the cr/lf end-of-line terminator in every msgid (required when parsed source files under Windows). */
-	public function Replace_CRLF_LF() {
-		if($this->Header) {
-			$this->Header->Replace_CRLF_LF();
-		}
-		foreach($this->Entries as $entry) {
-			$entry->Replace_CRLF_LF();
-		}
-	}
-
-	/** Add one/many entries to the entries of this instance.
-	* @param POEntry|array[POEntry] $entries The entry/entries to be merged with this instance.
-	*/
-	public function MergeEntries($entries) {
-		if(is_array($entries)) {
-			foreach($entries as $entry) {
-				$this->MergeEntries($entry);
-			}
-		}
-		else {
-			$hash = $entries->GetHash();
-			if(array_key_exists($hash, $this->Entries)) {
-				$this->Entries[$hash]->MergeWith($entries);
-			}
-			else {
-				$this->Entries[$hash] = $entries;
-			}
-		}
-	}
-
-	/** Save the data to file.
-	* @param string $filename The filename to save the data to (if existing it'll be overwritten).
-	* @param bool $indent Set to true to indent data, false otherwise (default: false).
-	* @throws Exception Throws an exception in case of errors.
-	*/
-	public function SaveAs($filename, $indent = false) {
-		$tempFilename = Enviro::GetTemporaryFileName();
-		try {
-			if(!$hFile = @fopen($tempFilename, 'wb')) {
-				global $php_errormsg;
-				throw new Exception("Error opening '$tempFilename': $php_errormsg");
-			}
-			try {
-				$isFirst = true;
-				if($this->Header) {
-					$this->Header->SaveTo($hFile, $indent);
-					$isFirst = false;
-				}
-				foreach($this->Entries as $entry) {
-					if($isFirst) {
-						$isFirst = false;
-					}
-					else {
-						fwrite($hFile, "\n");
-					}
-					$entry->SaveTo($hFile, $indent);
-				}
-				fflush($hFile);
-			} catch(Exception $x) {
-				@fclose($hFile);
-				throw $x;
-			}
-			fclose($hFile);
-			$dirname = dirname($filename);
-			if(is_file($dirname)) {
-				throw new Exception("we'd like to use the folder '$dirname', but it's a file!");
-			}
-			if(!is_dir($dirname)) {
-				if(!@mkdir($dirname, 0777, true)) {
-					throw new Exception("unable to create the folder '$dirname'!");
-				}
-			}
-			if(!is_writable($dirname)) {
-				throw new Exception("the folder '$dirname' is not writable!");
-			}
-			if(is_file($filename)) {
-				if(!is_writable($filename)) {
-					throw new Exception("the file $filename is not writable!");
-				}
-				if(@unlink($filename) === false) {
-					global $php_errormsg;
-					throw new Exception("error deleting $filename: $php_errormsg");
-				}
-			}
-			if(!@rename($tempFilename, $filename)) {
-				throw new Exception("error renaming from '$tempFilename' to '$filename'!");
-			}
-		} catch(Exception $x) {
-			@unlink($tempFilename);
-			throw $x;
-		}
-	}
 }
 
 /** Represents a .po file (and exposes .po-related functions). */
-class POFile extends POTFile {
+class POFile extends POxFile {
 
 	/** Reads a .po from file.
 	* @param string $filename The name of the file to read.
