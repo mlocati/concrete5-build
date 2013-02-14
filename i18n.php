@@ -274,7 +274,7 @@ class ToolOptions {
 					self::DownloadZip(
 						'http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-1_win32.zip',
 						array(
-							'bin/intl.dll' => self::$Win32ToolsFolder
+							'bin/intl.dll' => Options::$Win32ToolsFolder
 						)
 					);
 					self::DownloadZip(
