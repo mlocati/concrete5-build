@@ -83,7 +83,7 @@ class ToolOptions {
 
 	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'andrew@concrete5.org';
-		self::$Indent = self::$IndentDefault = true;
+		self::$Indent = self::$IndentDefault = false;
 		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty');
 		self::$ExcludeDirsFromPotPackageDefault = array('libraries/3rdparty');
 		self::$Packages = array();
