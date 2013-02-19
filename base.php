@@ -253,11 +253,13 @@ class Options {
 		$v = @trim($value);
 		if(strlen($v)) {
 			switch(strtolower($v)) {
+				case 'y':
 				case 'yes':
 				case 'true':
 				case 'on':
 				case '1':
 					return true;
+				case 'n':
 				case 'no':
 				case 'false':
 				case 'off':
