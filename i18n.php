@@ -590,7 +590,7 @@ class Interactive {
 					break;
 				case 'I':
 					for(;;) {
-						Console::Write('Enter new intent value [Y/N]: ');
+						Console::Write('Enter new indent value [Y/N]: ');
 						$s = trim(Console::ReadLine());
 						if(!strlen($s)) {
 							Console::WriteLine('Skipped.');
