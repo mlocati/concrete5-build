@@ -1848,6 +1848,7 @@ class POEntry {
 				throw new Exception(get_class($node) . ' in ' . $filenameRel);
 		}
 		$path = $prePath . '/' . $node->tagName;
+		$childnodesLimit = null;
 		switch($path) {
 			case '/concrete5-cif':
 			case '/concrete5-cif/attributecategories':
@@ -1909,7 +1910,6 @@ class POEntry {
 			case '/concrete5-cif/config':
 			case '/concrete5-cif/stacks/stack/area/block/data/record';
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
-			case '/concrete5-cif/pages/page/area/block/data/record':
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/attributetypes/attributetype':
@@ -1927,7 +1927,7 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/page/area':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
-				// Translabe text: name attribute
+				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				break;
 			case '/concrete5-cif/singlepages/page':
@@ -1936,9 +1936,17 @@ class POEntry {
 			case '/concrete5-cif/permissionkeys/permissionkey':
 			case '/concrete5-cif/taskpermissions/taskpermission':
 			case '/concrete5-cif/pagetypes/pagetype/page':
-				// Translabe text: name attribute, description attribute
+				// Translatable text: name attribute, description attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
+				break;
+			case '/concrete5-cif/pages/page/area/block/data/record':
+				// Skip this node and *almost* all its children
+				$childnodesLimit = array('title');
+				break;
+			case '/concrete5-cif/pages/page/area/block/data/record/title':
+				// Translatable text: node value
+				self::ReadNodeValue($filenameRel, $node, $entries);
 				break;
 			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
 				switch($node->parentNode->getAttribute('handle')) {
@@ -1952,7 +1960,9 @@ class POEntry {
 		}
 		if($node->hasChildNodes()) {
 			foreach($node->childNodes as $child) {
-				self::ParseXmlNode($filenameRel, $path, $child, $entries);
+				if((!$childnodesLimit) || (is_a($child, 'DOMElement') && array_search($child->tagName, $childnodesLimit) !== false)) {
+					self::ParseXmlNode($filenameRel, $path, $child, $entries);
+				}
 			}
 		}
 	}
@@ -1965,6 +1975,21 @@ class POEntry {
 	*/
 	private static function ReadNodeAttribute($filenameRel, $node, $attributeName, &$entries) {
 		$value = $node->getAttribute($attributeName);
+		if(strlen($value)) {
+			if(!array_key_exists($value, $entries)) {
+				$entries[$value] = new POEntrySingle($value);
+			}
+			$entries[$value]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
+		}
+	}
+
+	/** Parse a node value and create a POEntry item if it has a value.
+	* @param string $filenameRel The relative file name of the xml file being read.
+	* @param DOMNode $node The current node.
+	* @param ref array[POEntry] $entries Will be populated with found entries.
+	*/
+	private static function ReadNodeValue($filenameRel, $node, &$entries) {
+		$value = $node->nodeValue;
 		if(strlen($value)) {
 			if(!array_key_exists($value, $entries)) {
 				$entries[$value] = new POEntrySingle($value);
