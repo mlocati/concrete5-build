@@ -7,50 +7,103 @@ try {
 	if(ToolOptions::$Compress && (!Enviro::CheckNodeJS('uglifyjs'))) {
 		die(1);
 	}
-	MergeJavascript(
-		array(
-			'concrete/js/bootstrap/bootstrap.tooltip.js',
-			'concrete/js/bootstrap/bootstrap.popover.js',
-			'concrete/js/bootstrap/bootstrap.dropdown.js',
-			'concrete/js/bootstrap/bootstrap.transitions.js',
-			'concrete/js/bootstrap/bootstrap.alert.js'
-		),
-		'concrete/js/bootstrap.js',
-		ToolOptions::$OmitComments ? '--no-copyright' : ''
-	);
-	MergeJavascript(
-		'concrete/js/ccm_app/jquery.cookie.js',
-		'concrete/js/jquery.cookie.js',
-		ToolOptions::$OmitComments ? '--no-copyright' : ''
-	);
-	MergeJavascript(
-		array(
-			'concrete/js/ccm_app/jquery.colorpicker.js',
-			'concrete/js/ccm_app/jquery.hoverIntent.js',
-			'concrete/js/ccm_app/jquery.liveupdate.js',
-			'concrete/js/ccm_app/jquery.metadata.js',
-			'concrete/js/ccm_app/chosen.jquery.js',
-			'concrete/js/ccm_app/dashboard.js',
-			'concrete/js/ccm_app/filemanager.js',
-			'concrete/js/ccm_app/jquery.cookie.js',
-			'concrete/js/ccm_app/layouts.js',
-			'concrete/js/ccm_app/legacy_dialog.js',
-			'concrete/js/ccm_app/newsflow.js',
-			'concrete/js/ccm_app/page_reindexing.js',
-			'concrete/js/ccm_app/quicksilver.js',
-			'concrete/js/ccm_app/remote_marketplace.js',
-			'concrete/js/ccm_app/search.js',
-			'concrete/js/ccm_app/sitemap.js',
-			'concrete/js/ccm_app/status_bar.js',
-			'concrete/js/ccm_app/tabs.js',
-			'concrete/js/ccm_app/tinymce_integration.js',
-			'concrete/js/ccm_app/ui.js',
-			'concrete/js/ccm_app/toolbar.js',
-			'concrete/js/ccm_app/themes.js'
-		),
-		'concrete/js/ccm.app.js',
-		array('--no-seqs', ToolOptions::$OmitComments ? '--no-copyright' : '')
-	);
+	$coreVersion = Options::GetVersionOfConcrete5();
+	switch($coreVersion) {
+		case '5.6.0.2':
+			MergeJavascript(
+				array(
+					'concrete/js/bootstrap/bootstrap.tooltip.js',
+					'concrete/js/bootstrap/bootstrap.popover.js',
+					'concrete/js/bootstrap/bootstrap.dropdown.js',
+					'concrete/js/bootstrap/bootstrap.transitions.js',
+					'concrete/js/bootstrap/bootstrap.alert.js'
+				),
+				'concrete/js/bootstrap.js'
+			);
+			MergeJavascript(
+				'concrete/js/ccm_app/jquery.cookie.js',
+				'concrete/js/jquery.cookie.js'
+			);
+			MergeJavascript(
+				array(
+					'concrete/js/ccm_app/jquery.colorpicker.js',
+					'concrete/js/ccm_app/jquery.hoverIntent.js',
+					'concrete/js/ccm_app/jquery.liveupdate.js',
+					'concrete/js/ccm_app/jquery.metadata.js',
+					'concrete/js/ccm_app/chosen.jquery.js',
+					'concrete/js/ccm_app/dashboard.js',
+					'concrete/js/ccm_app/filemanager.js',
+					'concrete/js/ccm_app/jquery.cookie.js',
+					'concrete/js/ccm_app/layouts.js',
+					'concrete/js/ccm_app/legacy_dialog.js',
+					'concrete/js/ccm_app/newsflow.js',
+					'concrete/js/ccm_app/page_reindexing.js',
+					'concrete/js/ccm_app/quicksilver.js',
+					'concrete/js/ccm_app/remote_marketplace.js',
+					'concrete/js/ccm_app/search.js',
+					'concrete/js/ccm_app/sitemap.js',
+					'concrete/js/ccm_app/status_bar.js',
+					'concrete/js/ccm_app/tabs.js',
+					'concrete/js/ccm_app/tinymce_integration.js',
+					'concrete/js/ccm_app/ui.js',
+					'concrete/js/ccm_app/toolbar.js',
+					'concrete/js/ccm_app/themes.js'
+				),
+				'concrete/js/ccm.app.js',
+				'--no-seqs'
+			);
+			break;
+		case '5.6.1':
+			MergeJavascript(
+				array(
+					'concrete/js/bootstrap/bootstrap.tooltip.js',
+					'concrete/js/bootstrap/bootstrap.popover.js',
+					'concrete/js/bootstrap/bootstrap.dropdown.js',
+					'concrete/js/bootstrap/bootstrap.transitions.js',
+					'concrete/js/bootstrap/bootstrap.alert.js'
+				),
+				'concrete/js/bootstrap.js'
+			);
+			MergeJavascript(
+				'concrete/js/ccm_app/jquery.cookie.js',
+				'concrete/js/jquery.cookie.js'
+			);
+			MergeJavascript(
+				'concrete/js/ccm_app/dashboard.js',
+				'concrete/js/ccm.dashboard.js',
+				'--no-seqs'
+			);
+			MergeJavascript(
+				array(
+					'concrete/js/ccm_app/jquery.colorpicker.js',
+					'concrete/js/ccm_app/jquery.hoverIntent.js',
+					'concrete/js/ccm_app/jquery.liveupdate.js',
+					'concrete/js/ccm_app/jquery.metadata.js',
+					'concrete/js/ccm_app/chosen.jquery.js',
+					'concrete/js/ccm_app/filemanager.js',
+					'concrete/js/ccm_app/jquery.cookie.js',
+					'concrete/js/ccm_app/layouts.js',
+					'concrete/js/ccm_app/legacy_dialog.js',
+					'concrete/js/ccm_app/newsflow.js',
+					'concrete/js/ccm_app/page_reindexing.js',
+					'concrete/js/ccm_app/quicksilver.js',
+					'concrete/js/ccm_app/remote_marketplace.js',
+					'concrete/js/ccm_app/search.js',
+					'concrete/js/ccm_app/sitemap.js',
+					'concrete/js/ccm_app/status_bar.js',
+					'concrete/js/ccm_app/tabs.js',
+					'concrete/js/ccm_app/tinymce_integration.js',
+					'concrete/js/ccm_app/ui.js',
+					'concrete/js/ccm_app/toolbar.js',
+					'concrete/js/ccm_app/themes.js'
+				),
+				'concrete/js/ccm.app.js',
+				'--no-seqs'
+			);
+			break;
+		default:
+			throw new Exception("Unsupported version of concrete5: $coreVersion");
+	}
 	if(is_string(Options::$InitialFolder)) {
 		@chdir(Options::$InitialFolder);
 	}
@@ -154,6 +207,9 @@ function MergeJavascript($srcFiles, $dstFile, $options = '', $pathsAreRelativeTo
 				else {
 					$options = array($options);
 				}
+			}
+			if(ToolOptions::$OmitComments) {
+				$options[] = '--no-copyright';
 			}
 			$options[] = '-o ' . escapeshellarg($tempFileDst);
 			$options[] = escapeshellarg($compressMe);
