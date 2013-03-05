@@ -42,7 +42,7 @@ function SetupIni() {
 * @throws Exception Throws an Exception when an error is detected during the script execution.
 */
 function ErrorCatcher($errno, $errstr, $errfile, $errline) {
-	throw new Exception("$errstr in $errfile on line $errline", $errno);
+	throw new Exception("$errstr in $errfile at line $errline", $errno);
 }
 
 /** End the execution for the specified exception.
