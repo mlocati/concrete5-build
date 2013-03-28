@@ -2091,6 +2091,14 @@ class POEntry {
 					}
 					$lineType = 'msgstr_plural';
 				}
+				elseif(strpos($trimmedLine, '#~') === 0) {
+					if($isDeleted === true) {
+						$lineType = 'text';
+					}
+					else {
+						throw new Exception('Misplaced deleted marked (#~)');
+					}
+				}
 				elseif($trimmedLine[0] == '#') {
 					if($dataReady) {
 						$lineType = 'next';
@@ -2151,8 +2159,8 @@ class POEntry {
 				}
 				switch($lineType) {
 					case 'next';
-					$nextStart = $i;
-					break;
+						$nextStart = $i;
+						break;
 					case 'comment':
 						if($msgidIndex < 0) {
 							while(preg_match('/^(#:[ \t].*?:\d+)[ \t]+([^ \t].*:\d.*)$/', $trimmedLine, $chunks)) {
@@ -2289,7 +2297,7 @@ class POEntrySingle extends POEntry {
 				continue;
 			}
 			for($j = $i; $j < $n; $j++) {
-				if(preg_match(($j == $i) ? '/"(.*)"[ \t]*$/' : '/^[ \t]*"(.*)"[ \t]*$/', $lines[$j], $matches)) {
+				if(preg_match(($j == $i) ? '/"(.*)"[ \t]*$/' : ('/^' . ($isDeleted ? '#~' : '') . '[ \t]*"(.*)"[ \t]*$/'), $lines[$j], $matches)) {
 					$values[$valueIndex][] = $matches[1];
 				}
 				else {
