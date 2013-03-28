@@ -1663,12 +1663,13 @@ class POEntry {
 
 	/** Save an array of strings to file.
 	* @param resource $hFile The file to save the data to.
+	 @param string $prefix The prefix for each line (eg '#~ ' for obsolete items).
 	* @param string $name The name of the data to be saved.
 	* @param array[string] $array The data to be saved.
 	* @param bool $indent Should we indent data [default: false].
 	* @param bool $skipIfEmptyArray Should we skip data writing if the data to write is empty.
 	*/
-	protected static function ArrayToFile($hFile, $name, $array, $indent = false, $skipIfEmptyArray = false) {
+	protected static function ArrayToFile($hFile, $prefix, $name, $array, $indent = false, $skipIfEmptyArray = false) {
 		if($indent) {
 			if(strlen($name) < 7) {
 				$name .= str_repeat(' ', 7 - strlen($name));
@@ -1687,11 +1688,11 @@ class POEntry {
 			$first = true;
 			foreach($array as $line) {
 				if($first) {
-					fwrite($hFile, "$name \"$line\"\n");
+					fwrite($hFile, "$prefix$name \"$line\"\n");
 					$first = false;
 				}
 				else {
-					fwrite($hFile, "$pre\"$line\"\n");
+					fwrite($hFile, "$prefix$pre\"$line\"\n");
 				}
 			}
 		}
@@ -1781,7 +1782,7 @@ class POEntry {
 			fwrite($hFile, $comment);
 			fwrite($hFile, "\n");
 		}
-		self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . 'msgctxt', $this->MsgCtxt, $indent, true);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgctxt', $this->MsgCtxt, $indent, true);
 	}
 
 	/** Retrieves POEntry instances from one/many .xml files.
@@ -2320,8 +2321,8 @@ class POEntrySingle extends POEntry {
 	*/
 	public function SaveTo($hFile, $indent = false) {
 		parent::_saveTo($hFile, $indent);
-		self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . 'msgid', $this->MsgId, $indent);
-		self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . 'msgstr', $this->MsgStr, $indent);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId, $indent);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgstr', $this->MsgStr, $indent);
 	}
 
 	/** Retrieves a string that uniquely identifies the entry.
@@ -2436,10 +2437,10 @@ class POEntryPlural extends POEntry {
 	*/
 	public function SaveTo($hFile, $indent = false) {
 		parent::_saveTo($hFile, $indent = false);
-		self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . 'msgid', $this->MsgId, $indent);
-		self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . 'msgid_plural', $this->MsgIdPlural, $indent);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId, $indent);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid_plural', $this->MsgIdPlural, $indent);
 		for($i = 0; $i < count($this->MsgStr); $i++) {
-			self::ArrayToFile($hFile, ($this->IsDeleted ? '#~ ' : '') . "msgstr[$i]", $this->MsgStr[$i], $indent);
+			self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', "msgstr[$i]", $this->MsgStr[$i], $indent);
 		}
 	}
 
