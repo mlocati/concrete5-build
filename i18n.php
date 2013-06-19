@@ -1974,14 +1974,16 @@ class POEntry {
 	* @param DOMNode $node The current node.
 	* @param string $attributeName The name of the attribute.
 	* @param ref array[POEntry] $entries Will be populated with found entries.
+	* @param string $context [default: ''] The translation context
 	*/
-	private static function ReadNodeAttribute($filenameRel, $node, $attributeName, &$entries) {
+	private static function ReadNodeAttribute($filenameRel, $node, $attributeName, &$entries, $context = '') {
 		$value = $node->getAttribute($attributeName);
 		if(strlen($value)) {
-			if(!array_key_exists($value, $entries)) {
-				$entries[$value] = new POEntrySingle($value);
+			$key = strlen($context) ? "$context\x04$value" : $value;
+			if(!array_key_exists($key, $entries)) {
+				$entries[$key] = new POEntrySingle($value, array(), array(), $context);
 			}
-			$entries[$value]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
+			$entries[$key]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
 		}
 	}
 
