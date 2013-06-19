@@ -1919,7 +1919,6 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/block':
 			case '/concrete5-cif/systemcaptcha/library':
 			case '/concrete5-cif/workflowtypes/workflowtype':
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype':
 			case '/concrete5-cif/stacks/stack';
 			case '/concrete5-cif/stacks/stack/area';
 			case '/concrete5-cif/stacks/stack/area/block';
@@ -1940,6 +1939,10 @@ class POEntry {
 			case '/concrete5-cif/attributetypes/attributetype':
 				// Translatable text: name attribute (it's a concrete5 attribute type name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeTypeName');
+				break;
+			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype':
+				// Translatable text: name attribute (it's a concrete5 access entity type name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'PermissionAccessEntityTypeName');
 				break;
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
