@@ -1915,7 +1915,6 @@ class POEntry {
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/attributetypes/attributetype':
-			case '/concrete5-cif/attributekeys/attributekey':
 			case '/concrete5-cif/attributesets/attributeset':
 			case '/concrete5-cif/pagetypes/pagetype':
 			case '/concrete5-cif/pages/page/area':
@@ -1931,6 +1930,10 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
 				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
+				break;
+			case '/concrete5-cif/attributekeys/attributekey':
+				// Translatable text: name attribute (it's a concrete5 attribute key name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeKeyName');
 				break;
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
