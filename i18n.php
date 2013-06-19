@@ -1914,7 +1914,6 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
 				// Skip this node and its children
 				return;
-			case '/concrete5-cif/attributetypes/attributetype':
 			case '/concrete5-cif/pagetypes/pagetype':
 			case '/concrete5-cif/pages/page/area':
 			case '/concrete5-cif/pages/page/area/block':
@@ -1938,15 +1937,23 @@ class POEntry {
 				// Translatable text: name attribute (it's a concrete5 attribute set name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeSetName');
 				break;
+			case '/concrete5-cif/attributetypes/attributetype':
+				// Translatable text: name attribute (it's a concrete5 attribute type name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeTypeName');
+				break;
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
 			case '/concrete5-cif/singlepages/page':
-			case '/concrete5-cif/permissionkeys/permissionkey':
 			case '/concrete5-cif/taskpermissions/taskpermission':
 			case '/concrete5-cif/pagetypes/pagetype/page':
 				// Translatable text: name attribute, description attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
+				break;
+			case '/concrete5-cif/permissionkeys/permissionkey':
+				// Translatable text: name attribute (it's a concrete5 attribute set name), description attribute
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'PermissionKeyName');
+				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, 'PermissionKeyDescription');
 				break;
 			case '/concrete5-cif/pages/page/area/block/data/record':
 				// Skip this node and *almost* all its children
