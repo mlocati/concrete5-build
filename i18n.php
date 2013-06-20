@@ -1204,6 +1204,12 @@ class POTFile extends POxFile {
 				throw new Exception('No .xml files found.');
 			}
 			Console::WriteLine(count($xmlFiles) . ' files found.');
+			if(version_compare($packageInfo->Version, '5.6.1.2', '<=')) {
+				$xmlContexts = false;
+			}
+			else {
+				$xmlContexts = true;
+			}
 		}
 		Console::Write('  Extracting strings from .php files... ');
 		$tempList = Enviro::GetTemporaryFileName();
@@ -1236,7 +1242,7 @@ class POTFile extends POxFile {
 				Console::WriteLine('done.');
 				if(!empty($xmlFiles)) {
 					Console::Write('  Extracting strings from .xml files... ');
-					$xmlEntries = POEntry::FromXmlFile($xmlFiles);
+					$xmlEntries = POEntry::FromXmlFile($xmlFiles, $xmlContexts);
 					Console::WriteLine('done.');
 				}
 				Console::Write('  Loading .pot file... ');
@@ -1788,14 +1794,15 @@ class POEntry {
 
 	/** Retrieves POEntry instances from one/many .xml files.
 	* @param string|array[string] $xmlFiles The .xml file(s) to read.
+	* @param bool $xmlContexts [default: false] Write contexts for the extracted strings?
 	* @return array[POEntry]
 	* @throws Exception Throws an Exception in case of errors.
 	*/
-	public static function FromXmlFile($xmlFiles) {
+	public static function FromXmlFile($xmlFiles, $xmlContexts = false) {
 		if(is_array($xmlFiles)) {
 			$result = array();
 			foreach($xmlFiles as $xmlFile) {
-				foreach(self::FromXmlFile($xmlFile) as $poEntry) {
+				foreach(self::FromXmlFile($xmlFile, $xmlContexts) as $poEntry) {
 					$hash = $poEntry->GetHash();
 					if(array_key_exists($hash, $result)) {
 						$result[$hash]->MergeWith($poEntry);
@@ -1819,7 +1826,7 @@ class POEntry {
 			$entries = array();
 			switch($xml->documentElement->tagName) {
 				case 'concrete5-cif':
-					self::ParseXmlNode($filenameRel, '', $xml->documentElement, $entries);
+					self::ParseXmlNode($filenameRel, '', $xml->documentElement, $entries, $xmlContexts);
 					break;
 				case 'schema':
 				case 'access':
@@ -1836,9 +1843,10 @@ class POEntry {
 	* @param string $prePath The path of the node containing the current node.
 	* @param DOMNode $node The current node.
 	* @param ref array[POEntry] $entries Will be populated with found entries.
+	* @param bool $xmlContexts [default: false] Write contexts for the extracted strings?
 	* @throws Exception Throws an Exception in case of errors.
 	*/
-	private static function ParseXmlNode($filenameRel, $prePath, $node, &$entries) {
+	private static function ParseXmlNode($filenameRel, $prePath, $node, &$entries, $xmlContexts = false) {
 		switch(get_class($node)) {
 			case 'DOMElement':
 				break;
@@ -1930,19 +1938,19 @@ class POEntry {
 				break;
 			case '/concrete5-cif/attributekeys/attributekey':
 				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeKeyName');
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeKeyName' : '');
 				break;
 			case '/concrete5-cif/attributesets/attributeset':
 				// Translatable text: name attribute (it's a concrete5 attribute set name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeSetName');
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeSetName' : '');
 				break;
 			case '/concrete5-cif/attributetypes/attributetype':
 				// Translatable text: name attribute (it's a concrete5 attribute type name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'AttributeTypeName');
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeTypeName' : '');
 				break;
 			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype':
 				// Translatable text: name attribute (it's a concrete5 access entity type name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'PermissionAccessEntityTypeName');
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PermissionAccessEntityTypeName' : '');
 				break;
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
@@ -1954,9 +1962,9 @@ class POEntry {
 				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
 				break;
 			case '/concrete5-cif/permissionkeys/permissionkey':
-				// Translatable text: name attribute (it's a concrete5 attribute set name), description attribute
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, 'PermissionKeyName');
-				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, 'PermissionKeyDescription');
+				// Translatable text: name attribute (it's a concrete5 permission key name), description attribute (it's a concrete5 permission key description)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PermissionKeyName' : '');
+				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, $xmlContexts ? 'PermissionKeyDescription' : '');
 				break;
 			case '/concrete5-cif/pages/page/area/block/data/record':
 				// Skip this node and *almost* all its children
@@ -1979,7 +1987,7 @@ class POEntry {
 		if($node->hasChildNodes()) {
 			foreach($node->childNodes as $child) {
 				if((!$childnodesLimit) || (is_a($child, 'DOMElement') && array_search($child->tagName, $childnodesLimit) !== false)) {
-					self::ParseXmlNode($filenameRel, $path, $child, $entries);
+					self::ParseXmlNode($filenameRel, $path, $child, $entries, $xmlContexts);
 				}
 			}
 		}
