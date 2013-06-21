@@ -1204,7 +1204,7 @@ class POTFile extends POxFile {
 				throw new Exception('No .xml files found.');
 			}
 			Console::WriteLine(count($xmlFiles) . ' files found.');
-			if(version_compare($packageInfo->Version, '5.6.1.2', '<=')) {
+			if(version_compare($packageInfo->Version, '5.6.1', '<')) {
 				$xmlContexts = false;
 			}
 			else {
