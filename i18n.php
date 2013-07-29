@@ -1887,6 +1887,8 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/block/stack':
 			case '/concrete5-cif/jobs':
 			case '/concrete5-cif/jobs/job':
+			case '/concrete5-cif/jobsets':
+			case '/concrete5-cif/jobsets/jobset/job':
 			case '/concrete5-cif/singlepages/page/area':
 			case '/concrete5-cif/permissioncategories':
 			case '/concrete5-cif/permissioncategories/category':
@@ -1981,6 +1983,10 @@ class POEntry {
 						break;
 				}
 				break;
+			case '/concrete5-cif/jobsets/jobset':
+				// Translatable text: name attribute (it's a concrete5 job set name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');				
+				break;				
 			default:
 				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel);
 		}
