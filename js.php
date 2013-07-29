@@ -52,7 +52,7 @@ try {
 			'--no-seqs'
 		);
 	}
-	else {
+	elseif(version_compare($coreVersion, '5.7', '<')) {
 		MergeJavascript(
 			array(
 				'concrete/js/bootstrap/bootstrap.tooltip.js',
@@ -97,6 +97,135 @@ try {
 				'concrete/js/ccm_app/themes.js'
 			),
 			'concrete/js/ccm.app.js',
+			'--no-seqs'
+		);
+	}
+	else {
+		MergeJavascript(
+			'concrete/js/ccm_app/jquery.cookie.js',
+			'concrete/js/jquery.cookie.js'
+		);
+		MergeJavascript(
+			'concrete/js/ccm_profile/base.js',
+			'concrete/js/ccm.profile.js'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/redactor/redactor.js',
+				'concrete/js/redactor/redactor.concrete5.js'
+			),
+			'concrete/js/redactor.js'
+		);
+		MergeJavascript(
+			'concrete/js/ccm_app/dashboard.js',
+			'concrete/js/ccm.dashboard.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			'concrete/js/composer/composer.js',
+			'concrete/js/ccm.composer.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/ccm_app/conversations/conversations.js',
+				'concrete/js/ccm_app/conversations/attachments.js'
+			),
+			'concrete/js/ccm.conversations.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/gathering/packery.js',
+				'concrete/js/gathering/gathering.js'
+			),
+			'concrete/js/ccm.gathering.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			'concrete/js/ccm_app/pubsub.js',
+			'concrete/js/ccm.pubsub.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/bootstrap/bootstrap-alert.js',
+				'concrete/js/bootstrap/bootstrap-tooltip.js',
+				'concrete/js/bootstrap/bootstrap-dropdown.js',
+				'concrete/js/bootstrap/bootstrap-popover.js',
+				'concrete/js/bootstrap/bootstrap-transition.js'
+			),
+			'concrete/js/bootstrap.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/ccm_app/jquery.colorpicker.js',
+				'concrete/js/ccm_app/jquery.hoverIntent.js',
+				'concrete/js/ccm_app/jquery.liveupdate.js',
+				'concrete/js/ccm_app/jquery.metadata.js',
+				'concrete/js/ccm_app/chosen.jquery.js',
+				'concrete/js/ccm_app/base.js',
+				'concrete/js/ccm_app/ui.js',
+				'concrete/js/ccm_app/edit_page.js',
+				'concrete/js/ccm_app/filemanager.js',
+				'concrete/js/ccm_app/jquery.cookie.js',
+				'concrete/js/ccm_app/dialog.js',
+				'concrete/js/ccm_app/alert.js',
+				'concrete/js/ccm_app/newsflow.js',
+				'concrete/js/ccm_app/page_reindexing.js',
+				'concrete/js/ccm_app/in_context_menu.js',
+				'concrete/js/ccm_app/quicksilver.js',
+				'concrete/js/ccm_app/remote_marketplace.js',
+				'concrete/js/ccm_app/progressive_operations.js',
+				'concrete/js/ccm_app/inline_edit.js',
+				'concrete/js/ccm_app/search.js',
+				'concrete/js/ccm_app/dynatree.js',
+				'concrete/js/ccm_app/sitemap.js',
+				'concrete/js/ccm_app/page_search.js',
+				'concrete/js/ccm_app/custom_style.js',
+				'concrete/js/ccm_app/tabs.js',
+				'concrete/js/ccm_app/toolbar.js',
+				'concrete/js/ccm_app/themes.js'
+			),
+			'concrete/js/ccm.app.js',
+			'--no-seqs'
+		);
+		MergeJavascript(
+			'concrete/js/layouts/layouts.js',
+			'concrete/js/ccm.layouts.js'
+		);
+		MergeJavascript(
+			'concrete/js/ccm_app/backstretch.js',
+			'concrete/js/jquery.backstretch.js'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/image_editor/build/kinetic.prototype.js',
+				'concrete/js/image_editor/build/imageeditor.js',
+				'concrete/js/image_editor/build/history.js',
+				'concrete/js/image_editor/build/events.js',
+				'concrete/js/image_editor/build/elements.js',
+				'concrete/js/image_editor/build/controls.js',
+				'concrete/js/image_editor/build/save.js',
+				'concrete/js/image_editor/build/extend.js',
+				'concrete/js/image_editor/build/background.js',
+				'concrete/js/image_editor/build/imagestage.js',
+				'concrete/js/image_editor/build/image.js',
+				'concrete/js/image_editor/build/actions.js',
+				'concrete/js/image_editor/build/slideOut.js',
+				'concrete/js/image_editor/build/jquerybinding.js',
+				'concrete/js/image_editor/build/filters.js'
+			),
+			'concrete/js/image_editor/image_editor.js',
+			'--no-seqs --no-squeeze --beautify'
+		);
+		MergeJavascript(
+			array(
+				'concrete/js/image_editor/build/kinetic.js',
+				'concrete/js/image_editor/image_editor.js'
+			),
+			'concrete/js/image_editor.min.js',
 			'--no-seqs'
 		);
 	}
