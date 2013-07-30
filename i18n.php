@@ -81,6 +81,7 @@ class ToolOptions {
 	*/
 	private static $InitializeData;
 
+	/** Initialize the default options. */
 	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'andrew@concrete5.org';
 		self::$Indent = self::$IndentDefault = false;
@@ -95,6 +96,7 @@ class ToolOptions {
 		);
 	}
 
+	/** Shows info about this tool. */
 	public static function ShowIntro() {
 		global $argv;
 		Console::WriteLine($argv[0] . ' is a tool that helps extracting localizable strings from concrete5 and/or from packages.');
@@ -111,6 +113,9 @@ class ToolOptions {
 		Console::WriteLine('For more information about gettext: http://www.gnu.org/software/gettext/manual/gettext.html');
 	}
 
+	/** Get the list of the tool-specific options.
+	* @return array
+	*/
 	public static function GetOptions(&$options) {
 		$options['--list-languages'] = array('description' => 'list all the usable languages');
 		$options['--list-countries'] = array('description' => 'list all the usable countries');
@@ -126,6 +131,7 @@ class ToolOptions {
 		$options['--potcontact'] = array('helpValue' => '<email>', 'description' => '(For core and/or each package) email address to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
 	}
 
+	/** Shows some examples. */
 	public static function ShowExamples() {
 		global $argv;
 		Console::WriteLine('The simplest: php ' . $argv[0] . ' --interactive');
@@ -135,6 +141,12 @@ class ToolOptions {
 		Console::WriteLine('To create the .pot file for concrete5 AND all the files for the package foobar: php ' . $argv[0] . ' --createpot=yes --package=foobar');
 	}
 
+	/** Parses an argument.
+	* @param string $argument
+	* @param string $value
+	* @throws Exception Throws an Exception in case of invalid argument values.
+	* @return boolean Return true if $argument is a tool-specific argument (ie it has been recognized), false otherwise.
+	*/
 	public static function ParseArgument($argument, $value) {
 		switch($argument) {
 			case '--list-languages':
@@ -1006,7 +1018,7 @@ abstract class POxFile {
 	* @var POEntrySingle|null
 	*/
 	public $Header;
-	
+
 	/** The entries in the file.
 	* @var array[POEntry]
 	*/
@@ -1057,14 +1069,14 @@ abstract class POxFile {
 			$entry->FixFilesSlash();
 		}
 	}
-	
+
 	/** Remove the superfluous i18n at the beginning of comments. */
 	public function FixI18NComments() {
 		foreach($this->Entries as $entry) {
 			$entry->FixI18NComments();
 		}
 	}
-	
+
 	/** Fix the cr/lf end-of-line terminator in every msgid (required when parsed source files under Windows). */
 	public function Replace_CRLF_LF() {
 		if($this->Header) {
@@ -1074,7 +1086,7 @@ abstract class POxFile {
 			$entry->Replace_CRLF_LF();
 		}
 	}
-	
+
 	/** Add one/many entries to the entries of this instance.
 	* @param POEntry|array[POEntry] $entries The entry/entries to be merged with this instance.
 	*/
@@ -1670,7 +1682,7 @@ class POEntry {
 
 	/** Save an array of strings to file.
 	* @param resource $hFile The file to save the data to.
-	 @param string $prefix The prefix for each line (eg '#~ ' for obsolete items).
+	* @param string $prefix The prefix for each line (eg '#~ ' for obsolete items).
 	* @param string $name The name of the data to be saved.
 	* @param array[string] $array The data to be saved.
 	* @param bool $indent Should we indent data [default: false].
@@ -2049,8 +2061,8 @@ class POEntry {
 				break;
 			case '/concrete5-cif/jobsets/jobset':
 				// Translatable text: name attribute (it's a concrete5 job set name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');				
-				break;				
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');
+				break;
 			default:
 				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel);
 		}

@@ -125,7 +125,7 @@ class Options {
 					$p = strrpos($chunk, ' ');
 					if(($p > 5) && ($p > $usable - 9)) {
 						$chunk = substr($chunk, 0, $p);
-					} 
+					}
 					Console::WriteLine($pre . trim($chunk));
 					$still = substr($still, strlen($chunk));
 					if($pre == '') {
@@ -221,11 +221,13 @@ class Options {
 			DieForException($x);
 		}
 	}
-	
+
+	/** Checks if the currently configured web root is valid. Throws an Exception if not.
+	* @throws Exception Throws an Exception if the currently configured web root not is valid.
+	*/
 	public static function CheckWebroot() {
 		self::GetVersionOfConcrete5();
 	}
-	
 
 	/** Return the boolean value of a command line option value.
 	* @param string $argumentName The argument name.
@@ -618,6 +620,11 @@ class Enviro {
 		self::_emptyFolder($folder, false);
 	}
 
+	/** Empties a folder and optionally delete it.
+	* @param string $folder The folder to delete/empty.
+	* @param bool $delete Should the folder be deleted (true) or just emptied (false)?
+	* @throws Exception Throws an Exception in case of errors.
+	*/
 	private static function _emptyFolder($folder, $delete) {
 		$s = @realpath($folder);
 		if(($s === false) || (!is_dir($s))) {

@@ -48,7 +48,7 @@ class Converter {
 	const FORMAT_WEBM = 'WebM';
 	const FORMAT_THEORA = 'Theora';
 	const FORMAT_POSTER = 'Poster';
-	
+
 	public static function Convert($workOn, $format) {
 		Console::Write("Creating $format... ");
 		$baseName = basename(ToolOptions::$SourceFile);
