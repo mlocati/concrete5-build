@@ -1868,8 +1868,8 @@ class POEntry {
 			case '/concrete5-cif/attributetypes/attributetype/categories/category':
 			case '/concrete5-cif/attributekeys':
 			case '/concrete5-cif/attributekeys/attributekey/type':
-			case '/concrete5-cif/attributekeys/attributekey/type/options';
-			case '/concrete5-cif/attributekeys/attributekey/type/options/option';
+			case '/concrete5-cif/attributekeys/attributekey/type/options':
+			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
 			case '/concrete5-cif/attributesets':
 			case '/concrete5-cif/attributesets/attributeset/attributekey':
 			case '/concrete5-cif/blocktypes':
@@ -1908,7 +1908,7 @@ class POEntry {
 			case '/concrete5-cif/taskpermissions/taskpermission/access':
 			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
 			case '/concrete5-cif/stacks':
-			case '/concrete5-cif/stacks/stack/area/block/data';
+			case '/concrete5-cif/stacks/stack/area/block/data':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data':
 			case '/concrete5-cif/pagetypes/pagetype/composer':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items':
@@ -1916,11 +1916,11 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
-			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey';
+			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey':
 				// Skip this node
 				break;
 			case '/concrete5-cif/config':
-			case '/concrete5-cif/stacks/stack/area/block/data/record';
+			case '/concrete5-cif/stacks/stack/area/block/data/record':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
 				// Skip this node and its children
 				return;
@@ -1929,9 +1929,9 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/block':
 			case '/concrete5-cif/systemcaptcha/library':
 			case '/concrete5-cif/workflowtypes/workflowtype':
-			case '/concrete5-cif/stacks/stack';
-			case '/concrete5-cif/stacks/stack/area';
-			case '/concrete5-cif/stacks/stack/area/block';
+			case '/concrete5-cif/stacks/stack':
+			case '/concrete5-cif/stacks/stack/area':
+			case '/concrete5-cif/stacks/stack/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/page/area':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
