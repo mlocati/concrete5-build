@@ -1917,11 +1917,31 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey':
+			case '/concrete5-cif/systemcontenteditorsnippets':
+			case '/concrete5-cif/blocktypesets':
+			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
+			case '/concrete5-cif/composertargettypes':
+			case '/concrete5-cif/composercontroltypes':
+			case '/concrete5-cif/composers':
+			case '/concrete5-cif/composers/composer/target':
+			case '/concrete5-cif/composers/composer/formlayout':
+			case '/concrete5-cif/gatheringsources':
+			case '/concrete5-cif/gatheringitemtemplates':
+			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate/feature':
+			case '/concrete5-cif/conversationeditors':
+			case '/concrete5-cif/conversationratingtypes':
 				// Skip this node
 				break;
 			case '/concrete5-cif/config':
 			case '/concrete5-cif/stacks/stack/area/block/data/record':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
+			case '/concrete5-cif/banned_words':
+			case '/concrete5-cif/flag_types':
+			case '/concrete5-cif/features':
+			case '/concrete5-cif/gatheringitemtemplatetypes':
+			case '/concrete5-cif/featurecategories':
+			case '/concrete5-cif/composers/composer/pagetypes':
+			case '/concrete5-cif/composers/composer/output':
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/pagetypes/pagetype':
@@ -1953,6 +1973,50 @@ class POEntry {
 			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype':
 				// Translatable text: name attribute (it's a concrete5 access entity type name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PermissionAccessEntityTypeName' : '');
+				break;
+			case '/concrete5-cif/systemcontenteditorsnippets/snippet':
+				// Translatable text: name attribute (it's a concrete5 system content editor snippet name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'SystemContentEditorSnippetName' : '');
+				break;
+			case '/concrete5-cif/blocktypesets/blocktypeset':
+				// Translatable text: a concrete5 block type set name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'BlockTypeSetName' : '');
+				break;
+			case '/concrete5-cif/composertargettypes/type':
+				// Translatable text: a concrete5 ComposerTargetType name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerTargetTypeName' : '');
+				break;
+			case '/concrete5-cif/composercontroltypes/type':
+				// Translatable text: a concrete5 ComposerControlType name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerControlTypeName' : '');
+				break;
+			case '/concrete5-cif/composers/composer':
+				// Translatable text: a concrete5 Composer name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerName' : '');
+				break;
+			case '/concrete5-cif/composers/composer/formlayout/set':
+				// Translatable text: a concrete5 ComposerFormLayoutSet name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerFormLayoutSetName' : '');
+				break;
+			case '/concrete5-cif/composers/composer/formlayout/set/control':
+				// Translatable text: a concrete5 ComposerFormLayoutSetControl custom label
+				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'ComposerFormLayoutSetControlCustomLabel' : '');
+				break;
+			case '/concrete5-cif/gatheringsources/gatheringsource':
+				// Translatable text: a concrete5 GatheringDataSource name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'GatheringDataSourceName' : '');
+				break;
+			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate':
+				// Translatable text: a concrete5 GatheringItemTemplate name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'GatheringItemTemplateName' : '');
+				break;
+			case '/concrete5-cif/conversationeditors/editor':
+				// Translatable text: a concrete5 ConversationEditor name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ConversationEditorName' : '');
+				break;
+			case '/concrete5-cif/conversationratingtypes/conversationratingtype':
+				// Translatable text: a concrete5 ConversationRatingType name
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ConversationRatingTypeName' : '');
 				break;
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
