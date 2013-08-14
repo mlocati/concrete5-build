@@ -36,7 +36,7 @@ try {
 
 class ToolOptions {
 
-	/** The email address to which translators should report localization bugs.
+	/** The email address/URL to which translators should report localization bugs.
 	* @var string
 	*/
 	public static $PotContactConcrete5Default;
@@ -83,7 +83,7 @@ class ToolOptions {
 
 	/** Initialize the default options. */
 	public static function InitializeDefaults() {
-		self::$PotContactConcrete5Default = 'andrew@concrete5.org';
+		self::$PotContactConcrete5Default = 'http://www.concrete5.org/developers/bugs/';
 		self::$Indent = self::$IndentDefault = false;
 		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty');
 		self::$ExcludeDirsFromPotPackageDefault = array('libraries/3rdparty');
@@ -128,7 +128,7 @@ class ToolOptions {
 		$options['--compile'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .mo files from .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--potname'] = array('helpValue' => '<filename>', 'description' => '(For core and/or each package) name of the .pot filename (just the name, without path: it\'ll be saved in the \'languages\' folder)');
 		$options['--excludedirfrompot'] = array('helpValue' => '<dir>', 'description' => '(For core and/or each package) folder which may not be parsed when creating a.pot file. To specify multiple values you can specify this argument more than once (default for concrete5: ' . implode(self::$ExcludeDirsFromPotConcrete5Default), ', default for packages: ' . implode(self::$ExcludeDirsFromPotPackageDefault, ', ') . ')');
-		$options['--potcontact'] = array('helpValue' => '<email>', 'description' => '(For core and/or each package) email address to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
+		$options['--potcontact'] = array('helpValue' => '<email|url>', 'description' => '(For core and/or each package) email address or URL to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
 	}
 
 	/** Shows some examples. */
