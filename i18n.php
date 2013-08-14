@@ -1242,7 +1242,6 @@ class POTFile extends POxFile {
 				$args[] = '--add-comments=i18n'; // Place comment blocks preceding keyword lines in output file if they start with '// i18n: '
 				$args[] = '--keyword'; // Don't use default keywords
 				$args[] = '--keyword=t:1'; // Look for the first argument of the "t" function for extracting translatable text in singular form
-				$args[] = '--keyword=_:1'; // Look for the first argument of the "_" function for extracting translatable text in singular form
 				$args[] = '--keyword=t2:1,2'; // Look for the first and second arguments of the "t2" function for extracting both the singular and plural forms
 				$args[] = '--keyword=tc:1c,2'; // Look for the first argument of the "tc" function for extracting translation context, and the second argument is the translatable text in singular form.
 				$args[] = '--no-escape'; // Do not use C escapes in output
