@@ -60,7 +60,7 @@ try {
 			}
 			Console::WriteLine('done.');
 			Console::Write("Compiling $languageCode... ");
-			$filesToZip[$moRel] = $tempMO = Enviro::GetTemporaryFileName();
+			$tempFiles[] = $tempMO = Enviro::GetTemporaryFileName();
 			$args = array();
 			$args[] = '--output-file=' . escapeshellarg($tempMO);
 			$args[] = '--check-format';
@@ -68,6 +68,7 @@ try {
 			$args[] = '--check-domain';
 			$args[] = escapeshellarg($tempPO);
 			Enviro::RunTool('msgfmt', $args);
+			$filesToZip[$moRel] = $tempMO;
 			Console::WriteLine('done.');
 		}
 	}
