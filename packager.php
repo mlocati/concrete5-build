@@ -11,35 +11,104 @@ try {
 		Console::WriteLine("'" . ToolOptions::$packageHandle . "' is not a valid package handle.", true);
 		die(1);
 	}
-	Console::Write('Parsing source files... ');
+	Console::WriteLine('Parsing source files');
 	$filesToZip = array();
 	$content = Enviro::GetDirectoryContent($sourceFolder, true);
+	$iconSvg = '';
 	for($i = 0; $i < count($content['filesRel']); $i++) {
 		$rel = $content['filesRel'][$i];
 		$full = $content['filesFull'][$i];
+		$skip = false;
 		if(preg_match('|^[^/]*\\.md$|i', $rel)) {
-			continue;
+			$skip = true;
 		}
-		if(preg_match('|^[^/]*\\.svg$|i', $rel)) {
-			continue;
+		elseif(preg_match('|^[^/]*\\.svg$|i', $rel)) {
+			$skip = true;
+			if(strcasecmp('icon.svg', $rel) === 0) {
+				$iconSvg = $full;
+			}
 		}
-		if(preg_match('|^languages/\\w+/LC_MESSAGES/messages\\.po$|i', $rel)) {
-			continue;
+		elseif(preg_match('|^languages/\\w+/LC_MESSAGES/messages\\.po$|i', $rel)) {
+			$skip = true;
 		}
-		switch(strtolower($rel)) {
-			case 'languages/messages.pot':
-				$rel = '';
-				break;
+		else {
+			switch(strtolower($rel)) {
+				case 'languages/messages.pot':
+					$skip = true;
+					break;
+			}
 		}
-		if(!strlen($rel)) {
-			continue;
+		if($skip) {
+			Console::WriteLine("\tSkipped file: $rel");
 		}
-		if(preg_match('|\\.php$|i', $rel)) {
-			prbChecker::checkForbiddenFunctions($full);
+		else {
+			if(preg_match('|\\.php$|i', $rel)) {
+				prbChecker::checkForbiddenFunctions($full);
+			}
+			$filesToZip[$rel] = $full;
 		}
-		$filesToZip[$rel] = $full;
 	}
-	Console::WriteLine('done.');
+	Console::WriteLine("\t" . count($filesToZip) . " files found.");
+	if($iconSvg) {
+		$tempFiles[] = $tempIcon = Enviro::GetTemporaryFileName();
+		Console::Write('Building icon.png... ');
+		$inkscapePath = 'inkscape';
+		try {
+			Enviro::Run($inkscapePath, '--version');
+		}
+		catch(Exception $x) {
+			$inkscapePath = '';
+			$eKeys = array('ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432');
+			if(isset($_ENV) && is_array($_ENV)) {
+				foreach($_ENV as $eKey => $eValue) {
+					foreach($eKeys as $eMaybe) {
+						if(strcasecmp(eKey, $eMaybe) === 0) {
+							$s = Enviro::MergePath($eValue, 'Inkscape', 'inkscape.exe');
+							if(is_file($s)) {
+								$inkscapePath = $s;
+								break;
+							}
+						}
+					}
+					if(strlen($inkscapePath)) {
+						break;
+					}
+				}
+			}
+			if(!strlen($inkscapePath)) {
+				foreach($eKeys as $eKey) {
+					$eValue = @getenv($eKey);
+					if(is_string($eValue) && strlen($eValue)) {
+						$s = Enviro::MergePath($eValue, 'Inkscape', 'inkscape.exe');
+						if(is_file($s)) {
+							$inkscapePath = $s;
+							break;
+						}
+					}
+				}
+				
+			}
+		}
+		if(!strlen($inkscapePath)) {
+			if(array_key_exists('icon.png', $filesToZip)) {
+				Console::WriteLine('skipped (Inkscape not found).');
+			}
+			else {
+				throw new Exception('Unable to find Inkscape');
+			}
+		}
+		else {
+			$args = array();
+			$args[] = '--file=' . escapeshellarg($iconSvg);
+			$args[] = '--export-png=' . escapeshellarg($tempIcon);
+			$args[] = '--export-area-page';
+			$args[] = '--export-width=97';
+			$args[] = '--export-height=97';
+			Enviro::Run($inkscapePath, $args);
+			$filesToZip['icon.png'] = $tempIcon;
+			Console::WriteLine('done.');
+		}
+	}
 	if(ToolOptions::$transifexDo) {
 		Console::Write('Listing Transifex languages... ');
 		$languageCodes = Transifexer::getLanguages(1);
