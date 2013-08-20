@@ -20,6 +20,11 @@ Launch it with `php i18n.php --help` for help & options, or with `php i18n.php -
 ### Requirements: php command line 5.1
 This tool is able to create a cloned version of a concrete5 installation, expanding the short tags into long ones (useful when working on a version of concrete5 taken from GitHub).
 
+## packager.php
+### Requirements: php command line 5.2.2
+Tool to create zip file from a package, ready to be submitted to the PRB.
+It's quite a nice tool: allows you to directly integrate translations taken from Transifex.
+
 ## video.php
 ### Requirements: php command line 5.1
 This tool is able to create video files suitable for the html5 <video> tag.
