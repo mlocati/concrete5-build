@@ -99,7 +99,7 @@ try {
 	}
 	try {
 		foreach($filesToZip as $rel => $abs) {
-			if(@$zip->addFile($abs, $rel) === false) {
+			if(@$zip->addFile($abs, ToolOptions::$packageHandle . '/' . $rel) === false) {
 				throw new Exception('Error zipping file ' . $rel);
 			}
 		}
