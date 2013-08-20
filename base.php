@@ -361,7 +361,7 @@ class Console {
 					}
 					break;
 			}
-			self::Write('Pleas answer with Y[es] or N[o]: ', $msgIsErr ? true : false);
+			self::Write('Please answer with Y[es] or N[o]: ', $msgIsErr ? true : false);
 		}
 	}
 }
