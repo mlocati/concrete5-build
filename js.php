@@ -94,7 +94,8 @@ try {
 				'concrete/js/ccm_app/tinymce_integration.js',
 				'concrete/js/ccm_app/ui.js',
 				'concrete/js/ccm_app/toolbar.js',
-				'concrete/js/ccm_app/themes.js'
+				'concrete/js/ccm_app/themes.js',
+				'concrete/js/ccm_app/composer.js'
 			),
 			'concrete/js/ccm.app.js',
 			'--no-seqs'
