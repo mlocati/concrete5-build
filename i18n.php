@@ -1880,7 +1880,6 @@ class POEntry {
 			case '/concrete5-cif/attributekeys':
 			case '/concrete5-cif/attributekeys/attributekey/type':
 			case '/concrete5-cif/attributekeys/attributekey/type/options':
-			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
 			case '/concrete5-cif/attributesets':
 			case '/concrete5-cif/attributesets/attributeset/attributekey':
 			case '/concrete5-cif/blocktypes':
@@ -1900,7 +1899,6 @@ class POEntry {
 			case '/concrete5-cif/jobs/job':
 			case '/concrete5-cif/jobsets':
 			case '/concrete5-cif/jobsets/jobset/job':
-			case '/concrete5-cif/singlepages/page/area':
 			case '/concrete5-cif/permissioncategories':
 			case '/concrete5-cif/permissioncategories/category':
 			case '/concrete5-cif/permissionkeys':
@@ -1956,14 +1954,12 @@ class POEntry {
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/pagetypes/pagetype':
-			case '/concrete5-cif/pages/page/area':
 			case '/concrete5-cif/pages/page/area/block':
 			case '/concrete5-cif/systemcaptcha/library':
 			case '/concrete5-cif/workflowtypes/workflowtype':
 			case '/concrete5-cif/stacks/stack':
 			case '/concrete5-cif/stacks/stack/area':
 			case '/concrete5-cif/stacks/stack/area/block':
-			case '/concrete5-cif/pagetypes/pagetype/page/area':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
 				// Translatable text: name attribute
@@ -2061,6 +2057,19 @@ class POEntry {
 			case '/concrete5-cif/jobsets/jobset':
 				// Translatable text: name attribute (it's a concrete5 job set name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');
+				break;
+			case '/concrete5-cif/singlepages/page/area':
+			case '/concrete5-cif/pages/page/area':
+			case '/concrete5-cif/pagetypes/pagetype/page/area':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AreaName' : '');
+				break;
+			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
+				$attributeKeyType = $node/*option*/->parentNode/*options*/->parentNode/*type*/->parentNode/*attributekey*/->getAttribute('type');
+				switch(strlen($attributeKeyType) ? strval($attributeKeyType) : '') {
+					case 'select':
+						self::ReadNodeAttribute($filenameRel, $node, 'value', $entries, $xmlContexts ? 'SelectAttributeValue' : '');
+						break;
+				}
 				break;
 			default:
 				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel);
