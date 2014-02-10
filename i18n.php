@@ -1922,23 +1922,32 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/attributekey':
+			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey':
+			case '/concrete5-cif/pagetypes/pagetype/pagetemplates':
+			case '/concrete5-cif/pagetypes/pagetype/pagetemplates/pagetemplate':
+			case '/concrete5-cif/pagetypes/pagetype/target':
 			case '/concrete5-cif/systemcontenteditorsnippets':
 			case '/concrete5-cif/blocktypesets':
 			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
-			case '/concrete5-cif/composertargettypes':
 			case '/concrete5-cif/composercontroltypes':
-			case '/concrete5-cif/composers':
-			case '/concrete5-cif/composers/composer/target':
-			case '/concrete5-cif/composers/composer/formlayout':
 			case '/concrete5-cif/gatheringsources':
 			case '/concrete5-cif/gatheringitemtemplates':
 			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate/feature':
 			case '/concrete5-cif/conversationeditors':
 			case '/concrete5-cif/conversationratingtypes':
+			case '/concrete5-cif/pagetemplates':
+			case '/concrete5-cif/imageeditor_controlsets':
+			case '/concrete5-cif/imageeditor_components':
+			case '/concrete5-cif/imageeditor_filters':
+			case '/concrete5-cif/pagetypepublishtargettypes':
+			case '/concrete5-cif/pagetypecomposercontroltypes':
 				// Skip this node
 				break;
 			case '/concrete5-cif/config':
@@ -1949,8 +1958,7 @@ class POEntry {
 			case '/concrete5-cif/features':
 			case '/concrete5-cif/gatheringitemtemplatetypes':
 			case '/concrete5-cif/featurecategories':
-			case '/concrete5-cif/composers/composer/pagetypes':
-			case '/concrete5-cif/composers/composer/output':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/pagetypes/pagetype':
@@ -1989,25 +1997,9 @@ class POEntry {
 				// Translatable text: a concrete5 block type set name
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'BlockTypeSetName' : '');
 				break;
-			case '/concrete5-cif/composertargettypes/type':
-				// Translatable text: a concrete5 ComposerTargetType name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerTargetTypeName' : '');
-				break;
 			case '/concrete5-cif/composercontroltypes/type':
 				// Translatable text: a concrete5 ComposerControlType name
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerControlTypeName' : '');
-				break;
-			case '/concrete5-cif/composers/composer':
-				// Translatable text: a concrete5 Composer name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerName' : '');
-				break;
-			case '/concrete5-cif/composers/composer/formlayout/set':
-				// Translatable text: a concrete5 ComposerFormLayoutSet name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerFormLayoutSetName' : '');
-				break;
-			case '/concrete5-cif/composers/composer/formlayout/set/control':
-				// Translatable text: a concrete5 ComposerFormLayoutSetControl custom label
-				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'ComposerFormLayoutSetControlCustomLabel' : '');
 				break;
 			case '/concrete5-cif/gatheringsources/gatheringsource':
 				// Translatable text: a concrete5 GatheringDataSource name
@@ -2061,6 +2053,7 @@ class POEntry {
 			case '/concrete5-cif/singlepages/page/area':
 			case '/concrete5-cif/pages/page/area':
 			case '/concrete5-cif/pagetypes/pagetype/page/area':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area':
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AreaName' : '');
 				break;
 			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
@@ -2071,8 +2064,32 @@ class POEntry {
 						break;
 				}
 				break;
+			case '/concrete5-cif/pagetemplates/pagetemplate':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTemplateName' : '');
+				break;
+			case '/concrete5-cif/imageeditor_controlsets/imageeditor_controlset':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorControlSetName' : '');
+				break;
+			case '/concrete5-cif/imageeditor_components/imageeditor_component':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorComponentName' : '');
+				break;
+			case '/concrete5-cif/imageeditor_filters/imageeditor_filter':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorFilterName' : '');
+				break;
+			case '/concrete5-cif/pagetypepublishtargettypes/type':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypePublishTargetTypeName' : '');
+				break;
+			case '/concrete5-cif/pagetypecomposercontroltypes/type':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerControlTypeName' : '');
+				break;
+			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetName' : '');
+				break;
+			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set/control':
+				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetControlCustomLabel' : '');
+				break;
 			default:
-				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel);
+				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel . "\n\nNode:\n" . $node->ownerDocument->saveXML($node));
 		}
 		if($node->hasChildNodes()) {
 			foreach($node->childNodes as $child) {
