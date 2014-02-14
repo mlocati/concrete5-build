@@ -1817,13 +1817,22 @@ class POEntry {
 	/** Remove the superfluous i18n at the beginning of comments. */
 	public function FixI18NComments() {
 		$n = count($this->Comments);
+		$simplifiedComments = false;
 		for($i = 0; $i < $n; $i++) {
-			if(preg_match('/^#\\.\s/', $this->Comments[$i])) {
-				if(preg_match('/^#\\.\s+i18n\s*(:\s*)(.+)$/', $this->Comments[$i], $m)) {
-					$this->Comments[$i] = '#. ' . $m[2];
-				}
-				break;
+			if(preg_match('/^#\\.\\s+i18n:?\\s*(.+)$/', $this->Comments[$i], $m)) {
+				$this->Comments[$i] = '#. ' . $m[1];
+				$simplifiedComments = true;
 			}
+		}
+		if($simplifiedComments) {
+			// Remove potential duplicated comments
+			$finalComments = array();
+			for($i = 0; $i < $n; $i++) {
+				if((!preg_match('/^#. /', $this->Comments[$i])) || (array_search($this->Comments[$i], $finalComments) === false)) {
+					$finalComments[] = $this->Comments[$i];
+				}
+			}
+			$this->Comments = $finalComments;
 		}
 	}
 
