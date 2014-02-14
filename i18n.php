@@ -1009,6 +1009,68 @@ EOT
 		return Enviro::MergePath($parent, 'languages', Language::NormalizeCode($language), 'LC_MESSAGES', 'messages.mo');
 	}
 
+	/** Returns a list of the available block type handles
+	* @return array
+	* @throws Exception
+	*/
+	public function getBlockHandles() {
+		$pathRel = $this->DirectoryToPotify . '/blocks';
+		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
+		$blockHandles = array();
+		if(@is_dir($pathAbs)) {
+			if(!($hDir = @opendir($pathAbs))) {
+				global $php_errormsg;
+				throw new Exception("Error opening '$pathAbs': $php_errormsg");
+			}
+			try {
+				while(($entry = @readdir($hDir)) !== false) {
+					if(strpos($entry, '.') !== 0) {
+						if(is_dir(Enviro::MergePath($pathAbs, $entry))) {
+							$blockHandles[] = $entry;
+						}
+					}
+				}
+			}
+			catch(Exception $x) {
+				@closedir($hDir);
+				throw $x;
+			}
+			@closedir($hDir);
+		}
+		return $blockHandles;
+	}
+	/** Returns a list of the available (custom/composer) template files
+	* @param string $blockHandle
+	* @return array
+	* @throws Exception
+	*/
+	public function getBlockTypeTemplateFiles($blockHandle) {
+		$result = array();
+		foreach(array('templates', 'composer') as $subFolder) {
+			$result[$subFolder] = array();
+			$pathRel = $this->DirectoryToPotify . "/blocks/$blockHandle/$subFolder";
+			$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
+			if(is_dir($pathAbs)) {
+				if(!($hDir = @opendir($pathAbs))) {
+					global $php_errormsg;
+					throw new Exception("Error opening '$pathAbs': $php_errormsg");
+				}
+				try {
+					while(($entry = @readdir($hDir)) !== false) {
+						if(strpos($entry, '.') !== 0) {
+							$result[$subFolder][] = "$pathRel/$entry";
+						}
+					}
+				}
+				catch(Exception $x) {
+					@closedir($hDir);
+					throw $x;
+				}
+				@closedir($hDir);
+			}
+		}
+		return $result;
+	}
 }
 
 /** Base class for POTFile and POFile. */
@@ -1209,6 +1271,10 @@ class POTFile extends POxFile {
 		}
 		Console::WriteLine(count($phpFiles) . ' files found.');
 		$xmlFiles = array();
+		$useContexts = true;
+		if($packageInfo->IsConcrete5 && (version_compare($packageInfo->Version, '5.6.1') < 0)) {
+			$useContexts = false;
+		}
 		if($packageInfo->IsConcrete5) {
 			Console::Write('  Listing .xml files... ');
 			self::GetFiles($packageInfo->DirectoryToPotify, 'xml', $xmlFiles, $packageInfo->ExcludeDirsFromPot);
@@ -1216,13 +1282,30 @@ class POTFile extends POxFile {
 				throw new Exception('No .xml files found.');
 			}
 			Console::WriteLine(count($xmlFiles) . ' files found.');
-			if(version_compare($packageInfo->Version, '5.6.1', '<')) {
-				$xmlContexts = false;
-			}
-			else {
-				$xmlContexts = true;
+		}
+		Console::Write('  Listing filename-based strings... ');
+		$fileBasedEntries = array();
+		if((!$packageInfo->IsConcrete5) || (version_compare($packageInfo->Version, '5.6.3RC1') >= 0)) {
+			foreach($packageInfo->getBlockHandles() as $blockHandle) {
+				foreach($packageInfo->getBlockTypeTemplateFiles($blockHandle) as $list) {
+					foreach($list as $rel) {
+						$name = basename($rel);
+						if(strpos($name, '.') !== false) {
+							$name = substr($name, 0, strrpos($name, '.'));
+						}
+						$name = ucwords(str_replace(array('_', '-', '/'), ' ', $name));
+						
+						
+						$key = "TemplateFileName\x04$name";
+						if(!array_key_exists($key, $fileBasedEntries)) {
+							$fileBasedEntries[$key] = new POEntrySingle($name, array(), array(), 'TemplateFileName');
+						}
+						$fileBasedEntries[$key]->Comments[] = '#: ' . $rel;
+					}
+				}
 			}
 		}
+		Console::WriteLine(count($fileBasedEntries) . ' strings found.');
 		Console::Write('  Extracting strings from .php files... ');
 		$tempList = Enviro::GetTemporaryFileName();
 		try {
@@ -1253,7 +1336,7 @@ class POTFile extends POxFile {
 				Console::WriteLine('done.');
 				if(!empty($xmlFiles)) {
 					Console::Write('  Extracting strings from .xml files... ');
-					$xmlEntries = POEntry::FromXmlFile($xmlFiles, $xmlContexts);
+					$xmlEntries = POEntry::FromXmlFile($xmlFiles, $useContexts);
 					Console::WriteLine('done.');
 				}
 				Console::Write('  Loading .pot file... ');
@@ -1270,6 +1353,11 @@ class POTFile extends POxFile {
 				if(!empty($xmlFiles)) {
 					Console::Write('  Merging strings from xml... ');
 					$pot->MergeEntries($xmlEntries);
+					Console::WriteLine('done.');
+				}
+				if(!empty($fileBasedEntries)) {
+					Console::Write('  Merging filename-based strings... ');
+					$pot->MergeEntries($fileBasedEntries);
 					Console::WriteLine('done.');
 				}
 				Console::Write('  Saving .pot file... ');
