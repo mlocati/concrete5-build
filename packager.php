@@ -42,7 +42,7 @@ try {
 			Console::WriteLine("\tSkipped file: $rel");
 		}
 		else {
-			if(preg_match('|\\.php$|i', $rel)) {
+			if(ToolOptions::$checkForbiddenFunctions && preg_match('|\\.php$|i', $rel)) {
 				prbChecker::checkForbiddenFunctions($full);
 			}
 			$filesToZip[$rel] = $full;
@@ -110,6 +110,9 @@ try {
 		}
 	}
 	if(ToolOptions::$transifexDo) {
+		if(!strlen(ToolOptions::$transifexResource)) {
+			ToolOptions::$transifexResource = str_replace('_', '-', ToolOptions::$packageHandle);
+		}
 		Console::Write('Listing Transifex languages... ');
 		$languageCodes = Transifexer::getLanguages(1);
 		Console::WriteLine(count($languageCodes) . ' languages found.');
@@ -249,7 +252,12 @@ class ToolOptions {
 	* @var bool
 	*/
 	public static $transifexDo;
-	
+
+	/** Shall we check for PRB forbidden functions?
+	* @var bool
+	*/
+	public static $checkForbiddenFunctions;
+
 	/** Initialize the default options. */
 	public static function InitializeDefaults() {
 		self::$packageHandle = '';
@@ -259,6 +267,7 @@ class ToolOptions {
 		self::$transifexProject = '';
 		self::$transifexResource = '';
 		self::$transifexDo = false;
+		self::$checkForbiddenFunctions = true;
 	}
 
 	/** Shows info about this tool. */
@@ -275,8 +284,9 @@ class ToolOptions {
 		$options['--destination'] = array('description' => 'the zip file name (of the directory that will contain it)');
 		$options['--transifex-username'] = array('description' => 'the Transifex user name');
 		$options['--transifex-password'] = array('description' => 'the Transifex password');
-		$options['--transifex-project'] = array('description' => 'the Transifex project slug');
-		$options['--transifex-resource'] = array('description' => 'the Transifex resource slug');
+		$options['--transifex-project'] = array('description' => 'the Transifex project slug (defaults to concrete5-packages)');
+		$options['--transifex-resource'] = array('description' => 'the Transifex resource slug (defaults to package handle)');
+		$options['--prb-checks'] = array('helpValue' => '<yes|no>', 'description' => 'Check for functions forbidden in PRB (defaults to yes)');
 	}
 
 	/** Parses an argument.
@@ -304,6 +314,9 @@ class ToolOptions {
 				return true;
 			case '--transifex-resource':
 				self::$transifexResource = $value;
+				return true;
+			case '--prb-checks':
+				self::$checkForbiddenFunctions = Options::ArgumentToBool($argument, $value);
 				return true;
 			default:
 				return false;
@@ -338,12 +351,7 @@ class ToolOptions {
 				die(1);
 			}
 			if(!strlen(self::$transifexProject)) {
-				Console::WriteLine('If you want to fetch translations from Transifex you have to specify the Transifex project slug.', true);
-				die(1);
-			}
-			if(!strlen(self::$transifexResource)) {
-				Console::WriteLine('If you want to fetch translations from Transifex you have to specify the Transifex resource slug.', true);
-				die(1);
+				self::$transifexProject = 'concrete5-packages';
 			}
 			self::$transifexDo = true;
 		}
@@ -558,7 +566,7 @@ class Transifexer {
 		if(!function_exists('curl_init')) {
 			throw new Exception('cURL extension not available.');
 		}
-		$fullUrl = 'http://www.transifex.com/api/2/project/' . ToolOptions::$transifexProject . '/resource/' . ToolOptions::$transifexResource . '/' . ltrim($url, '/');
+		$fullUrl = 'https://www.transifex.com/api/2/project/' . ToolOptions::$transifexProject . '/resource/' . ToolOptions::$transifexResource . '/' . ltrim($url, '/');
 		$hCurl = @curl_init($fullUrl);
 		if($hCurl === false) {
 			throw new Exception('curl_init() failed.');
@@ -588,7 +596,7 @@ class Transifexer {
 			if(!strlen($err)) {
 				throw new Exception('curl_exec() failed');
 			}
-			throw new Exception('curl_exec() failed: ' . $err);
+			throw new Exception('curl_exec() failed: ' . $err . "\n\n$fullUrl");
 		}
 		$info = @curl_getinfo($hCurl);
 		$rc = (is_array($info) && array_key_exists('http_code', $info) && is_numeric($info['http_code'])) ? intval($info['http_code']) : 0;
