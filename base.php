@@ -75,11 +75,6 @@ class Options {
 	*/
 	public static $Win32ToolsFolder;
 
-	/** The default folder containing the web part of concrete5.
-	* @var string
-	*/
-	public static $WebrootDefaultFolder;
-
 	/** The directory containing the web part of concrete5.
 	* @var string
 	*/
@@ -154,7 +149,7 @@ class Options {
 		$options = array();
 		$options['--help'] = array('description' => 'show the help for this command.');
 		if(!class_exists('ToolOptions') || !property_exists('ToolOptions', 'NeedWebRoot') || ToolOptions::$NeedWebRoot) {
-			$options['--webroot'] = array('helpValue' => '<folder>', 'description' => 'set the web root of concrete5 (default: ' . self::$WebrootDefaultFolder . ')');
+			$options['--webroot'] = array('helpValue' => '<folder>', 'description' => 'set the web root of concrete5 (default: try to automatically detect it)');
 		}
 		if(class_exists('ToolOptions') && method_exists('ToolOptions', 'GetOptions')) {
 			ToolOptions::GetOptions($options);
@@ -172,8 +167,22 @@ class Options {
 			self::$InitialFolder = getcwd();
 			self::$BuildFolder = dirname(__FILE__);
 			self::$Win32ToolsFolder = Enviro::MergePath(self::$BuildFolder, 'win32tools');
-			self::$WebrootDefaultFolder = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'web';
-			self::$WebrootFolder = self::$WebrootDefaultFolder;
+			self::$WebrootFolder = false;
+			foreach(array(getcwd(), dirname(__FILE__)) as $base) {
+			foreach(array('../web', '..', '../..', 'web', '.') as $rel) {
+					$tmp = @realpath(Enviro::MergePath($base, $rel));
+					if(is_dir($tmp) && is_file(Enviro::MergePath($tmp, 'index.php')) && is_dir(Enviro::MergePath($tmp, 'concrete')) && is_file(Enviro::MergePath($tmp, 'concrete', 'dispatcher.php'))) {
+						self::$WebrootFolder = $tmp;
+						break;
+					}
+				}
+				if(self::$WebrootFolder !== false) {
+					break;
+				}
+			}
+			if(self::$WebrootFolder === false) {
+				self::$WebrootFolder = realpath(dirname(dirname(__FILE__)));
+			}
 			if(class_exists('ToolOptions') && method_exists('ToolOptions', 'InitializeDefaults')) {
 				ToolOptions::InitializeDefaults();
 			}
