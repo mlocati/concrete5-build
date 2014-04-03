@@ -13,14 +13,25 @@ try {
 			if($package->CreatePot) {
 				POTFile::CreateNew($package);
 			}
+			$languages = ToolOptions::getLanguages($package);
 			if($package->CreatePo) {
-				foreach(ToolOptions::$Languages as $language) {
-					POFile::CreateNew($package, $language);
+				if(empty($languages)) {
+					Console::WriteLine('No languages to create/update .po files for!');
+				}
+				else {
+					foreach($languages as $language) {
+						POFile::CreateNew($package, $language);
+					}
 				}
 			}
 			if($package->Compile) {
-				foreach(ToolOptions::$Languages as $language) {
-					POFile::Compile($package, $language);
+				if(empty($languages)) {
+					Console::WriteLine('No languages to create .mo files for!');
+				}
+				else {
+					foreach($languages as $language) {
+						POFile::Compile($package, $language);
+					}
 				}
 			}
 		}
@@ -88,7 +99,7 @@ class ToolOptions {
 		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty');
 		self::$ExcludeDirsFromPotPackageDefault = array('libraries/3rdparty');
 		self::$Packages = array();
-		self::$Languages = null;
+		self::$Languages = array();
 		self::$Interactive = false;
 		self::$InitializeData = array(
 			'packagesMap' => array(),
@@ -121,7 +132,7 @@ class ToolOptions {
 		$options['--list-countries'] = array('description' => 'list all the usable countries');
 		$options['--interactive'] = array('description' => 'start an interactive session');
 		$options['--indent'] = array('helpValue' => '<yes|no>', 'description' => 'set to yes to generate indented .pot/.po files, false for not-indented generation (default: ' . (self::$IndentDefault ? 'yes' : 'no') . ')');
-		$options['--languages'] = array('helpValue' => '<LanguagesCode>', 'description' => 'list of comma-separated languages for which create the .po files (default: ' . implode(',', Language::GetStandardCodes()) . ')');
+		$options['--languages'] = array('helpValue' => '<LanguagesCode>', 'description' => 'list of comma-separated languages for which create the .po files (default: work on existing languages)');
 		$options['--package'] = array('helpValue' => '<packagename>', 'description' => 'adds a package. Subsequent arguments are relative to the latest package (or to concrete5 itself to ');
 		$options['--createpot'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .pot file, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--createpo'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
@@ -222,9 +233,6 @@ class ToolOptions {
 				}
 				return true;
 			case '--languages':
-				if(is_null(self::$Languages)) {
-					self::$Languages = array();
-				}
 				if(!strlen($value)) {
 					throw new Exception("Argument '$argument' requires a value.");
 				}
@@ -247,10 +255,6 @@ class ToolOptions {
 	* @throws Exception Throws an Exception in case of errors.
 	*/
 	public static function ArgumentsRead() {
-		if(is_null(self::$Languages)) {
-			self::$Languages = Language::GetStandardCodes();
-		}
-		sort(self::$Languages);
 		if(!self::$Interactive) {
 			foreach(self::$Packages as $packageInfo) {
 				$packageInfo->PostInitialize();
@@ -396,6 +400,43 @@ class ToolOptions {
 		}
 		Console::WriteLine('done.');
 	}
+
+	/** Returns the language to work on.
+	* @param string|PackageInfo $package The package (empty when working on core)
+	* @return array
+	*/
+	public static function getLanguages($package) {
+		if(!empty(self::$Languages)) {
+			$languages = self::$Languages;
+		}
+		else {
+			$dir = Options::$WebrootFolder;
+			if(!empty($package)) {
+				if(is_object($package)) {
+					$packageHandle = $package->Package;
+				}
+				else {
+					$packageHandle = $package;
+				}
+				if(strlen($packageHandle)) {
+					$dir = Enviro::MergePath($dir, 'packages', $packageHandle);
+				}
+			}
+			$languages = array();
+			$dir = Enviro::MergePath($dir, 'languages');
+			if(is_dir($dir)) {
+				$hDir = opendir($dir);
+				while(($item = readdir($hDir)) !== false) {
+					if((strpos($item, '.') !== 0) && is_dir(Enviro::MergePath($dir, $item))) {
+						$languages[] = $item;
+					}
+				}
+				closedir($hDir);
+			}
+		}
+		sort($languages);
+		return $languages;
+	}
 }
 
 /** Static class managing the interactive session. */
@@ -456,7 +497,7 @@ class Interactive {
 			self::ShowEntry($validOptions[] = 'P', 'Work on a concrete5 package');
 			self::ShowEntry($validOptions[] = 'W', 'Change webroot', 'Current value: ' . Options::$WebrootFolder);
 			self::ShowEntry($validOptions[] = 'I', 'Change indentation', 'Current value: ' . (ToolOptions::$Indent ? 'yes' : 'no'));
-			self::ShowEntry($validOptions[] = 'L', 'Change .po languages', 'Current value: ' . count(ToolOptions::$Languages) . ' language' . ((count(ToolOptions::$Languages) == 1) ? '' : 's'));
+			self::ShowEntry($validOptions[] = 'L', 'Change .po languages', 'Current value: ' . (empty(ToolOptions::$Languages) ? 'work on existing languages' : (count(ToolOptions::$Languages) . ' language' . ((count(ToolOptions::$Languages) == 1) ? '' : 's'))));
 			self::ShowEntry($validOptions[] = 'X', 'Exit');
 			switch(self::AskOption($validOptions)) {
 				case 'C':
@@ -658,11 +699,12 @@ class Interactive {
 					}
 					break;
 				case 'P':
-					if(empty(ToolOptions::$Languages)) {
+					$languages = ToolOptions::getLanguages($package);
+					if(empty($languages)) {
 						Console::WriteLine('No languages to create/update .po files for!');
 					}
 					else {
-						foreach(ToolOptions::$Languages as $language) {
+						foreach($languages as $language) {
 							try {
 								POFile::CreateNew($packageInfo, $language);
 							}
@@ -676,11 +718,12 @@ class Interactive {
 					}
 					break;
 				case 'C':
-					if(empty(ToolOptions::$Languages)) {
+					$languages = ToolOptions::getLanguages($package);
+					if(empty($languages)) {
 						Console::WriteLine('No languages to create .mo files for!');
 					}
 					else {
-						foreach(ToolOptions::$Languages as $language) {
+						foreach($languages as $language) {
 							try {
 								POFile::Compile($packageInfo, $language);
 							}
@@ -714,7 +757,7 @@ class Interactive {
 			switch(self::AskOption($validOptions)) {
 				case '?':
 					if(empty(ToolOptions::$Languages)) {
-						Console::WriteLine('No current languages');
+						Console::WriteLine('No current languages (work on existing ones)');
 					}
 					else {
 						foreach(ToolOptions::$Languages as $code) {
@@ -2691,49 +2734,6 @@ class Language {
 	*/
 	public static function GetSourceCode() {
 		return 'en';
-	}
-
-	/** Get the predefined language codes.
-	* @return array[string]
-	*/
-	public static function GetStandardCodes() {
-		return array(
-				'ar',
-				'bg',
-				'ca',
-				'cs_CZ',
-				'da_DK',
-				'de_DE',
-				'es',
-				'es_AR',
-				'es_ES',
-				'es_PE',
-				'et',
-				'fa_IR',
-				'fi_FI',
-				'fr_FR',
-				'he_IL',
-				'hi',
-				'hr',
-				'hu_HU',
-				'id_ID',
-				'it_IT',
-				'ja_JP',
-				'ku',
-				'lt_LT',
-				'nl_NL',
-				'no_NO',
-				'pl_PL',
-				'pt_BR',
-				'pt_PT',
-				'ro_RO',
-				'ru_RU',
-				'sv_SE',
-				'th_TH',
-				'tr',
-				'zh',
-				'zh_CN',
-		);
 	}
 
 	/** Split a code into language (required) and country (optional) codes (eg: from 'xx_XX' to array with <b>language</b> and <b>country</b>).
