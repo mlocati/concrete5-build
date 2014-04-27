@@ -96,7 +96,7 @@ class ToolOptions {
 	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'http://www.concrete5.org/developers/bugs/';
 		self::$Indent = self::$IndentDefault = false;
-		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty');
+		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty', 'concrete/vendor');
 		self::$ExcludeDirsFromPotPackageDefault = array('libraries/3rdparty');
 		self::$Packages = array();
 		self::$Languages = array();
@@ -1352,9 +1352,9 @@ class POTFile extends POxFile {
 		Console::Write('  Extracting strings from .php files... ');
 		$tempList = Enviro::GetTemporaryFileName();
 		try {
-			if(!@file_put_contents($tempList, implode("\n", $phpFiles))) {
+			if(@file_put_contents($tempList, implode("\n", $phpFiles)) === false) {
 				global $php_errormsg;
-				throw new Exception("Error writing to '$tempFile': $php_errormsg");
+				throw new Exception("Error writing to '$tempList': $php_errormsg");
 			}
 			$tempPot = Enviro::GetTemporaryFileName();
 			try {
@@ -1981,6 +1981,7 @@ class POEntry {
 					break;
 				case 'schema':
 				case 'access':
+				case 'doctrine-mapping':
 					break;
 				default:
 					throw new Exception('Unknown root node: ' . $xml->documentElement->tagName . ' in ' . $filenameRel);
