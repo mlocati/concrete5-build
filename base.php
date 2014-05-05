@@ -169,7 +169,7 @@ class Options {
 			self::$Win32ToolsFolder = Enviro::MergePath(self::$BuildFolder, 'win32tools');
 			self::$WebrootFolder = false;
 			foreach(array(getcwd(), dirname(__FILE__)) as $base) {
-			foreach(array('../web', '..', '../..', 'web', '.') as $rel) {
+			foreach(array('../web', '..', '../..', '../../..', 'web', '.') as $rel) {
 					$tmp = @realpath(Enviro::MergePath($base, $rel));
 					if(is_dir($tmp) && is_file(Enviro::MergePath($tmp, 'index.php')) && is_dir(Enviro::MergePath($tmp, 'concrete')) && is_file(Enviro::MergePath($tmp, 'concrete', 'dispatcher.php'))) {
 						self::$WebrootFolder = $tmp;

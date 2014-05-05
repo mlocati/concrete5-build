@@ -410,7 +410,7 @@ class ToolOptions {
 			$languages = self::$Languages;
 		}
 		else {
-			$dir = Options::$WebrootFolder;
+			$packageHandle = '';
 			if(!empty($package)) {
 				if(is_object($package)) {
 					$packageHandle = $package->Package;
@@ -418,8 +418,16 @@ class ToolOptions {
 				else {
 					$packageHandle = $package;
 				}
-				if(strlen($packageHandle)) {
-					$dir = Enviro::MergePath($dir, 'packages', $packageHandle);
+			}
+			if(strlen($packageHandle)) {
+				$dir = Enviro::MergePath(Options::$WebrootFolder, 'packages', $packageHandle);
+			}
+			else {
+				if(version_compare(Options::GetVersionOfConcrete5(), '5.7') < 0) {
+					$dir = Options::$WebrootFolder;
+				}
+				else {
+					$dir = Enviro::MergePath(Options::$WebrootFolder, 'application');					
 				}
 			}
 			$languages = array();
@@ -998,10 +1006,18 @@ EOT
 				$this->ExcludeDirsFromPot = ToolOptions::$ExcludeDirsFromPotConcrete5Default;
 			}
 			$this->Version = Options::GetVersionOfConcrete5();
-			$this->DirectoryToPotify = 'concrete';
-			$this->PotFullname = Enviro::MergePath(Options::$WebrootFolder, 'languages/' . $this->PotName);
-			$this->Potfile2root = '..';
-			$this->Pofile2root = '../../..';
+			if(version_compare($this->Version, '5.7') < 0) {
+				$this->DirectoryToPotify = 'concrete';
+				$this->PotFullname = Enviro::MergePath(Options::$WebrootFolder, 'languages', $this->PotName);
+				$this->Potfile2root = '..';
+				$this->Pofile2root = '../../..';
+			}
+			else {
+				$this->DirectoryToPotify = 'concrete';
+				$this->PotFullname = Enviro::MergePath(Options::$WebrootFolder, 'application', 'languages', $this->PotName);
+				$this->Potfile2root = '../..';
+				$this->Pofile2root = '../../../..';
+			}
 		}
 		else {
 			if(is_null($this->CreatePot)) {
@@ -1030,7 +1046,12 @@ EOT
 	*/
 	public function GetPoFullname($language) {
 		if($this->IsConcrete5) {
-			$parent = Options::$WebrootFolder;
+			if(version_compare($this->Version, '5.7') < 0) {
+				$parent = Options::$WebrootFolder;
+			}
+			else {
+				$parent = Enviro::MergePath(Options::$WebrootFolder, 'application');
+			}
 		}
 		else {
 			$parent = Enviro::MergePath(Options::$WebrootFolder, 'packages', $this->Package);
@@ -1044,7 +1065,12 @@ EOT
 	*/
 	public function GetMoFullname($language) {
 		if($this->IsConcrete5) {
-			$parent = Options::$WebrootFolder;
+			if(version_compare($this->Version, '5.7') < 0) {
+				$parent = Options::$WebrootFolder;
+			}
+			else {
+				$parent = Enviro::MergePath(Options::$WebrootFolder, 'application');
+			}
 		}
 		else {
 			$parent = Enviro::MergePath(Options::$WebrootFolder, 'packages', $this->Package);
