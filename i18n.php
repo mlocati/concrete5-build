@@ -2003,6 +2003,7 @@ class POEntry {
 			$entries = array();
 			switch($xml->documentElement->tagName) {
 				case 'concrete5-cif':
+				case 'styles':
 					self::ParseXmlNode($filenameRel, '', $xml->documentElement, $entries, $xmlContexts);
 					break;
 				case 'schema':
@@ -2115,6 +2116,7 @@ class POEntry {
 			case '/concrete5-cif/imageeditor_filters':
 			case '/concrete5-cif/pagetypepublishtargettypes':
 			case '/concrete5-cif/pagetypecomposercontroltypes':
+			case '/styles':
 				// Skip this node
 				break;
 			case '/concrete5-cif/config':
@@ -2137,6 +2139,8 @@ class POEntry {
 			case '/concrete5-cif/stacks/stack/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
+			case '/styles/set':
+			case '/styles/set/style':
 				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				break;
