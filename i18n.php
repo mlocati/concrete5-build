@@ -2139,10 +2139,14 @@ class POEntry {
 			case '/concrete5-cif/stacks/stack/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
-			case '/styles/set':
-			case '/styles/set/style':
 				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
+				break;
+			case '/styles/set':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'StyleSetName' : '');
+				break;
+			case '/styles/set/style':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'StyleName' : '');
 				break;
 			case '/concrete5-cif/attributekeys/attributekey':
 				// Translatable text: name attribute (it's a concrete5 attribute key name)
