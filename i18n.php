@@ -1108,6 +1108,75 @@ EOT
 		}
 		return $blockHandles;
 	}
+
+	/** Returns a list of the available theme handles
+	* @return array
+	* @throws Exception
+	*/
+	public function getThemeHandles() {
+		$pathRel = $this->DirectoryToPotify . '/themes';
+		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
+		$themeHandles = array();
+		if(@is_dir($pathAbs)) {
+			if(!($hDir = @opendir($pathAbs))) {
+				global $php_errormsg;
+				throw new Exception("Error opening '$pathAbs': $php_errormsg");
+			}
+			try {
+				while(($entry = @readdir($hDir)) !== false) {
+					if(strpos($entry, '.') !== 0) {
+						if(is_dir(Enviro::MergePath($pathAbs, $entry))) {
+							$themeHandles[] = $entry;
+						}
+					}
+				}
+			}
+			catch(Exception $x) {
+				@closedir($hDir);
+				throw $x;
+			}
+			@closedir($hDir);
+		}
+		return $themeHandles;
+	}
+	/** Returns a list of theme preset files (.less) and their content
+	* @return array
+	* @throws Exception
+	*/
+	public function getThemePresetFilesAndContent($themeHandle) {
+		$pathRel = $this->DirectoryToPotify . '/themes/' . $themeHandle . '/css/presets';
+		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
+		$presetFiles = array();
+		if(@is_dir($pathAbs)) {
+			if(!($hDir = @opendir($pathAbs))) {
+				global $php_errormsg;
+				throw new Exception("Error opening '$pathAbs': $php_errormsg");
+			}
+			try {
+				while(($entry = @readdir($hDir)) !== false) {
+					if(strpos($entry, '.') !== 0) {
+						if(preg_match('/.\\.less$/i', $entry)) {
+							$fileAbs = Enviro::MergePath($pathAbs, $entry);
+							if(is_file($fileAbs)) {
+								$content = @file_get_contents($fileAbs);
+								if($content === false) {
+									global $php_errormsg;
+									throw new Exception("Error reading '$fileAbs': $php_errormsg");
+								}
+								$presetFiles["$pathRel/$entry"] = str_replace("\r", "\n", str_replace("\r\n", "\n", $content));
+							}
+						}
+					}
+				}
+			}
+			catch(Exception $x) {
+				@closedir($hDir);
+				throw $x;
+			}
+			@closedir($hDir);
+		}
+		return $presetFiles;
+	}
 	/** Returns a list of the available (custom/composer) template files
 	* @param string $blockHandle
 	* @return array
@@ -1363,13 +1432,45 @@ class POTFile extends POxFile {
 							$name = substr($name, 0, strrpos($name, '.'));
 						}
 						$name = ucwords(str_replace(array('_', '-', '/'), ' ', $name));
-						
-						
 						$key = "TemplateFileName\x04$name";
 						if(!array_key_exists($key, $fileBasedEntries)) {
 							$fileBasedEntries[$key] = new POEntrySingle($name, array(), array(), 'TemplateFileName');
 						}
 						$fileBasedEntries[$key]->Comments[] = '#: ' . $rel;
+					}
+				}
+			}
+		}
+		if((!$packageInfo->IsConcrete5) || (version_compare($packageInfo->Version, '5.7') >= 0)) {
+			foreach($packageInfo->getThemeHandles() as $themeHandle) {
+				foreach($packageInfo->getThemePresetFilesAndContent($themeHandle) as $presetFile => $lessData) {
+					// Strip multiline comments
+					$lessData = preg_replace_callback(
+						'|/\*.*?\*/|s',
+						function($m) {
+							return str_repeat("\n", substr_count($m[0], "\n"));
+						},
+						$lessData
+					);
+					$found = false;
+					foreach(array("'", '"') as $quote) {
+						if(preg_match('%(?:^|\\n|;)[ \\t]*@preset-name:\\s*' . $quote . '([^' . $quote . ']*)' . $quote . '\\s*(?:;|$)%s', $lessData, $m)) {
+							$line = false;
+							$p = strpos($lessData, $m[0]);
+							if($p !== false) {
+								$line = substr_count(substr($lessData, 0, $p), "\n") + 1;
+							}
+							$found = array('name' => $m[1], 'line' => $line);
+							break;
+						}
+					}
+					if($found) {
+						$name = $found['name'];
+						$key = "PresetName\x04$name";
+						if(!array_key_exists($key, $fileBasedEntries)) {
+							$fileBasedEntries[$key] = new POEntrySingle($name, array(), array(), 'PresetName');
+						}
+						$fileBasedEntries[$key]->Comments[] = '#: ' . $presetFile . (($found['line'] === false) ? '' : ":{$found['line']}");
 					}
 				}
 			}
