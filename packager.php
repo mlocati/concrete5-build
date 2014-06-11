@@ -13,6 +13,7 @@ try {
 	}
 	Console::WriteLine('Parsing source files');
 	$filesToZip = array();
+	$filesToUpdate = array();
 	$content = Enviro::GetDirectoryContent($sourceFolder, true);
 	$iconSvg = '';
 	for($i = 0; $i < count($content['filesRel']); $i++) {
@@ -106,6 +107,7 @@ try {
 			$args[] = '--export-height=97';
 			Enviro::Run($inkscapePath, $args);
 			$filesToZip['icon.png'] = $tempIcon;
+			$filesToUpdate['icon.png'] = $tempIcon;
 			Console::WriteLine('done.');
 		}
 	}
@@ -141,69 +143,97 @@ try {
 			$args[] = escapeshellarg($tempPO);
 			Enviro::RunTool('msgfmt', $args);
 			$filesToZip[$moRel] = $tempMO;
+			$filesToUpdate[$moRel] = $tempMO;
 			Console::WriteLine('done.');
 		}
 	}
-	Console::Write("Creating zip archive... ");
-	$tempFiles[] = $tempZip = Enviro::GetTemporaryFileName();
-	if(!class_exists('ZipArchive')) {
-		throw new Exception('ZipArchive not available');
-	}
-	$zip = new ZipArchive();
-	$rc = @$zip->open($tempZip, ZipArchive::OVERWRITE);
-	if($rc !== true) {
-		$msgs = array(
-			ZipArchive::ER_EXISTS => "File already exists.",
-			ZipArchive::ER_INCONS => "Zip archive inconsistent.",
-			ZipArchive::ER_INVAL => "Invalid argument.",
-			ZipArchive::ER_MEMORY => "Malloc failure.",
-			ZipArchive::ER_NOENT => "No such file.",
-			ZipArchive::ER_NOZIP => "Not a zip archive.",
-			ZipArchive::ER_OPEN => "Can't open file.",
-			ZipArchive::ER_READ => "Read error.",
-			ZipArchive::ER_SEEK => "Seek error."
-		);
-		if(array_key_exists($rc, $msgs)) {
-			throw new Exception('ZipArchive::open() failed: ' . $msgs[$rc]);
-		}
-		else {
-			throw new Exception("ZipArchive::open() failed (error code: $rc).");
-		}
-	}
-	try {
-		foreach($filesToZip as $rel => $abs) {
-			if(@$zip->addFile($abs, ToolOptions::$packageHandle . '/' . $rel) === false) {
-				throw new Exception('Error zipping file ' . $rel);
+	if(ToolOptions::$destination === '-') {
+		Console::Write("Updating folder... ");
+		foreach($filesToUpdate as $rel => $absFrom) {
+			$absTo = Enviro::MergePath($sourceFolder, $rel);
+			if(is_file($absTo)) {
+				@unlink($absTo);
+				if(is_file($absTo)) {
+					throw new Exception("Unable to delete the file $absTo");
+				}
+			}
+			else {
+				$absToDir = dirname($absTo);
+				if(!is_dir($absToDir)) {
+					@mkdir($absToDir, 0777, true);
+					if(!is_dir($absToDir)) {
+						throw new Exception("Unable to create the folder $absToDir");
+					}
+				}
+			}
+			if(@rename($absFrom, $absTo) === false) {
+				throw new Exception("Unable to rename the temporary file $absFrom as $absTo");
 			}
 		}
+		Console::WriteLine('done.');
 	}
-	catch(Exception $x) {
+	else {
+		Console::Write("Creating zip archive... ");
+		$tempFiles[] = $tempZip = Enviro::GetTemporaryFileName();
+		if(!class_exists('ZipArchive')) {
+			throw new Exception('ZipArchive not available');
+		}
+		$zip = new ZipArchive();
+		$rc = @$zip->open($tempZip, ZipArchive::OVERWRITE);
+		if($rc !== true) {
+			$msgs = array(
+				ZipArchive::ER_EXISTS => "File already exists.",
+				ZipArchive::ER_INCONS => "Zip archive inconsistent.",
+				ZipArchive::ER_INVAL => "Invalid argument.",
+				ZipArchive::ER_MEMORY => "Malloc failure.",
+				ZipArchive::ER_NOENT => "No such file.",
+				ZipArchive::ER_NOZIP => "Not a zip archive.",
+				ZipArchive::ER_OPEN => "Can't open file.",
+				ZipArchive::ER_READ => "Read error.",
+				ZipArchive::ER_SEEK => "Seek error."
+			);
+			if(array_key_exists($rc, $msgs)) {
+				throw new Exception('ZipArchive::open() failed: ' . $msgs[$rc]);
+			}
+			else {
+				throw new Exception("ZipArchive::open() failed (error code: $rc).");
+			}
+		}
 		try {
-			@$zip->close();
+			foreach($filesToZip as $rel => $abs) {
+				if(@$zip->addFile($abs, ToolOptions::$packageHandle . '/' . $rel) === false) {
+					throw new Exception('Error zipping file ' . $rel);
+				}
+			}
 		}
-		catch(Exception $foo) {
+		catch(Exception $x) {
+			try {
+				@$zip->close();
+			}
+			catch(Exception $foo) {
+			}
+			throw $x;
 		}
-		throw $x;
+		if(@$zip->close() === false) {
+			throw new Exception('ZipArchive::close() failed.');
+		}
+		if(is_file(ToolOptions::$destination)) {
+			@unlink(ToolOptions::$destination);
+		}
+		if(file_exists(ToolOptions::$destination)) {
+			throw new Exception(ToolOptions::$destination . ' exists and is not a deletable file.');
+		}
+		if(@rename($tempZip, ToolOptions::$destination) === false) {
+			throw new Exception('Error creating the destination zip file.');
+		}
+		Console::WriteLine('done.');
+		Console::WriteLine("Zip file created:\n" . ToolOptions::$destination);
 	}
-	if(@$zip->close() === false) {
-		throw new Exception('ZipArchive::close() failed.');
-	}
-	if(is_file(ToolOptions::$destination)) {
-		@unlink(ToolOptions::$destination);
-	}
-	if(file_exists(ToolOptions::$destination)) {
-		throw new Exception(ToolOptions::$destination . ' exists and is not a deletable file.');
-	}
-	if(@rename($tempZip, ToolOptions::$destination) === false) {
-		throw new Exception('Error creating the destination zip file.');
-	}
-	Console::WriteLine('done.');
 	foreach($tempFiles as $tempFile) {
 		if(is_file($tempFile)) {
 			@unlink($tempFile);
 		}
 	}
-	Console::WriteLine("Zip file created:\n" . ToolOptions::$destination);
 	die(0);
 }
 catch(Exception $x) {
@@ -281,7 +311,7 @@ class ToolOptions {
 	*/
 	public static function GetOptions(&$options) {
 		$options['--package'] = array('description' => 'the package handle');
-		$options['--destination'] = array('description' => 'the zip file name (of the directory that will contain it)');
+		$options['--destination'] = array('description' => 'the zip file name (of the directory that will contain it). Use - to update the current package folder itself.');
 		$options['--transifex-username'] = array('description' => 'the Transifex user name');
 		$options['--transifex-password'] = array('description' => 'the Transifex password');
 		$options['--transifex-project'] = array('description' => 'the Transifex project slug (defaults to concrete5-packages)');
@@ -334,7 +364,7 @@ class ToolOptions {
 		if(!strlen(self::$destination)) {
 			self::$destination = Enviro::MergePath(Options::$WebrootFolder, 'packages', self::$packageHandle . '.zip');
 		}
-		elseif(is_dir(self::$destination)) {
+		elseif((self::$destination !== '-') && is_dir(self::$destination)) {
 			self::$destination = Enviro::MergePath(realpath(self::$destination), self::$packageHandle . '.zip');
 		}
 		if(!Enviro::IsFilenameWithoutPath(self::$packageHandle)) {
