@@ -121,9 +121,14 @@ try {
 		foreach($languageCodes as $languageCode) {
 			$moRel = "languages/$languageCode/LC_MESSAGES/messages.mo";
 			if(array_key_exists($moRel, $filesToZip)) {
-				Console::Write("Use Transifex version of $languageCode? ");
-				if(!Console::AskYesNo()) {
+				if(ToolOptions::$transifexWins === false) {
 					continue;
+				}
+				if(ToolOptions::$transifexWins !== true) {
+					Console::Write("Use Transifex version of $languageCode? ");
+					if(!Console::AskYesNo()) {
+						continue;
+					}
 				}
 			}
 			Console::Write("Downloading translation for $languageCode... ");
@@ -283,6 +288,11 @@ class ToolOptions {
 	*/
 	public static $transifexDo;
 
+	/** If a translation is found locally and in Transifex: who wins? (if null: ask)
+	* @var bool|null
+	*/
+	public static $transifexWins;
+
 	/** Shall we check for PRB forbidden functions?
 	* @var bool
 	*/
@@ -297,6 +307,7 @@ class ToolOptions {
 		self::$transifexProject = '';
 		self::$transifexResource = '';
 		self::$transifexDo = false;
+		self::$transifexWins = null;
 		self::$checkForbiddenFunctions = true;
 	}
 
@@ -316,6 +327,7 @@ class ToolOptions {
 		$options['--transifex-password'] = array('description' => 'the Transifex password');
 		$options['--transifex-project'] = array('description' => 'the Transifex project slug (defaults to concrete5-packages)');
 		$options['--transifex-resource'] = array('description' => 'the Transifex resource slug (defaults to package handle)');
+		$options['--transifex-wins'] = array('description' => 'If a translation is found locally and in Transifex: who wins? (don\'t specify this option to ask file-by-file)');
 		$options['--prb-checks'] = array('helpValue' => '<yes|no>', 'description' => 'Check for functions forbidden in PRB (defaults to yes)');
 	}
 
@@ -347,6 +359,9 @@ class ToolOptions {
 				return true;
 			case '--prb-checks':
 				self::$checkForbiddenFunctions = Options::ArgumentToBool($argument, $value);
+				return true;
+			case '--transifex-wins':
+				self::$transifexWins = Options::ArgumentToBool($argument, $value);
 				return true;
 			default:
 				return false;
