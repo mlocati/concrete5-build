@@ -2163,6 +2163,7 @@ class POEntry {
 			case '/concrete5-cif/pages/page/attributes/attributekey/value':
 			case '/concrete5-cif/pages/page/attributes/attributekey/value/option':
 			case '/concrete5-cif/pages/page/area/block/data':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data':
 			case '/concrete5-cif/pages/page/area/block/stack':
 			case '/concrete5-cif/jobs':
 			case '/concrete5-cif/jobs/job':
@@ -2187,6 +2188,9 @@ class POEntry {
 			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
 			case '/concrete5-cif/stacks':
 			case '/concrete5-cif/stacks/stack/area/block/data':
+			case '/concrete5-cif/pages/page/area/block/arealayout':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data':
 			case '/concrete5-cif/pagetypes/pagetype/composer':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items':
@@ -2195,6 +2199,9 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/output':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
+			case '/concrete5-cif/pagetypes/pagetype/formlayout':
+			case '/concrete5-cif/pagetypes/pagetype/output':
+			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
@@ -2202,6 +2209,7 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/pagetemplates':
 			case '/concrete5-cif/pagetypes/pagetype/pagetemplates/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/target':
+			case '/concrete5-cif/stacks/stack/area/block/link':
 			case '/concrete5-cif/systemcontenteditorsnippets':
 			case '/concrete5-cif/blocktypesets':
 			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
@@ -2229,6 +2237,7 @@ class POEntry {
 			case '/concrete5-cif/gatheringitemtemplatetypes':
 			case '/concrete5-cif/featurecategories':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data/record':
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/pagetypes/pagetype':
@@ -2240,6 +2249,7 @@ class POEntry {
 			case '/concrete5-cif/stacks/stack/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block':
 				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				break;
@@ -2332,6 +2342,10 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area':
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AreaName' : '');
 				break;
+			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate/page':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTemplatePageName' : '');
+				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, $xmlContexts ? 'PageTemplatePageDescription' : '');
+				break;
 			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
 				$attributeKeyType = $node/*option*/->parentNode/*options*/->parentNode/*type*/->parentNode/*attributekey*/->getAttribute('type');
 				switch(strlen($attributeKeyType) ? strval($attributeKeyType) : '') {
@@ -2358,8 +2372,17 @@ class POEntry {
 			case '/concrete5-cif/pagetypecomposercontroltypes/type':
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerControlTypeName' : '');
 				break;
+			case '/concrete5-cif/pagetypes/pagetype/formlayout/set':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeFormLayoutSetName' : '');
+				break;
+			case '/concrete5-cif/pagetypes/pagetype/formlayout/set':
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeFormLayoutSetName' : '');
+				break;
 			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set':
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetName' : '');
+				break;
+			case '/concrete5-cif/pagetypes/pagetype/formlayout/set/control':
+				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeFormLayoutSetControlCustomLabel' : '');
 				break;
 			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set/control':
 				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetControlCustomLabel' : '');
