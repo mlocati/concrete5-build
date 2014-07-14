@@ -2143,114 +2143,113 @@ class POEntry {
 			case '/concrete5-cif':
 			case '/concrete5-cif/attributecategories':
 			case '/concrete5-cif/attributecategories/category':
-			case '/concrete5-cif/attributetypes':
-			case '/concrete5-cif/attributetypes/attributetype/categories':
-			case '/concrete5-cif/attributetypes/attributetype/categories/category':
 			case '/concrete5-cif/attributekeys':
 			case '/concrete5-cif/attributekeys/attributekey/type':
 			case '/concrete5-cif/attributekeys/attributekey/type/options':
 			case '/concrete5-cif/attributesets':
 			case '/concrete5-cif/attributesets/attributeset/attributekey':
+			case '/concrete5-cif/attributetypes':
+			case '/concrete5-cif/attributetypes/attributetype/categories':
+			case '/concrete5-cif/attributetypes/attributetype/categories/category':
 			case '/concrete5-cif/blocktypes':
 			case '/concrete5-cif/blocktypes/blocktype':
-			case '/concrete5-cif/singlepages':
-			case '/concrete5-cif/singlepages/page/attributes':
-			case '/concrete5-cif/singlepages/page/attributes/attributekey':
-			case '/concrete5-cif/pagetypes':
-			case '/concrete5-cif/pages':
-			case '/concrete5-cif/pages/page/attributes':
-			case '/concrete5-cif/pages/page/attributes/attributekey':
-			case '/concrete5-cif/pages/page/attributes/attributekey/value':
-			case '/concrete5-cif/pages/page/attributes/attributekey/value/option':
-			case '/concrete5-cif/pages/page/area/block/data':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data':
-			case '/concrete5-cif/pages/page/area/block/stack':
+			case '/concrete5-cif/blocktypesets':
+			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
+			case '/concrete5-cif/composercontroltypes':
+			case '/concrete5-cif/conversationeditors':
+			case '/concrete5-cif/conversationratingtypes':
+			case '/concrete5-cif/gatheringitemtemplates':
+			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate/feature':
+			case '/concrete5-cif/gatheringsources':
+			case '/concrete5-cif/imageeditor_components':
+			case '/concrete5-cif/imageeditor_controlsets':
+			case '/concrete5-cif/imageeditor_filters':
 			case '/concrete5-cif/jobs':
 			case '/concrete5-cif/jobs/job':
 			case '/concrete5-cif/jobsets':
 			case '/concrete5-cif/jobsets/jobset/job':
-			case '/concrete5-cif/permissioncategories':
-			case '/concrete5-cif/permissioncategories/category':
-			case '/concrete5-cif/permissionkeys':
-			case '/concrete5-cif/permissionkeys/permissionkey/access':
-			case '/concrete5-cif/permissionkeys/permissionkey/access/group':
-			case '/concrete5-cif/systemcaptcha':
-			case '/concrete5-cif/workflowtypes':
-			case '/concrete5-cif/permissionaccessentitytypes':
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories':
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories/category':
-			case '/concrete5-cif/workflowprogresscategories':
-			case '/concrete5-cif/workflowprogresscategories/category':
-			case '/concrete5-cif/themes':
-			case '/concrete5-cif/themes/theme':
-			case '/concrete5-cif/taskpermissions':
-			case '/concrete5-cif/taskpermissions/taskpermission/access':
-			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
-			case '/concrete5-cif/stacks':
-			case '/concrete5-cif/stacks/stack/area/block/data':
+			case '/concrete5-cif/pages':
 			case '/concrete5-cif/pages/page/area/block/arealayout':
 			case '/concrete5-cif/pages/page/area/block/arealayout/columns':
 			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data':
+			case '/concrete5-cif/pages/page/area/block/data':
+			case '/concrete5-cif/pages/page/area/block/stack':
+			case '/concrete5-cif/pages/page/attributes':
+			case '/concrete5-cif/pages/page/attributes/attributekey':
+			case '/concrete5-cif/pages/page/attributes/attributekey/value':
+			case '/concrete5-cif/pages/page/attributes/attributekey/value/option':
+			case '/concrete5-cif/pagetemplates':
+			case '/concrete5-cif/pagetypecomposercontroltypes':
+			case '/concrete5-cif/pagetypepublishtargettypes':
+			case '/concrete5-cif/pagetypes':
 			case '/concrete5-cif/pagetypes/pagetype/composer':
+			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items':
 			case '/concrete5-cif/pagetypes/pagetype/composer/items/attributekey':
-			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
 			case '/concrete5-cif/pagetypes/pagetype/formlayout':
 			case '/concrete5-cif/pagetypes/pagetype/output':
 			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate':
+			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes':
-			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
 			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey':
 			case '/concrete5-cif/pagetypes/pagetype/pagetemplates':
 			case '/concrete5-cif/pagetypes/pagetype/pagetemplates/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/target':
+			case '/concrete5-cif/permissionaccessentitytypes':
+			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories':
+			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories/category':
+			case '/concrete5-cif/permissioncategories':
+			case '/concrete5-cif/permissioncategories/category':
+			case '/concrete5-cif/permissionkeys':
+			case '/concrete5-cif/permissionkeys/permissionkey/access':
+			case '/concrete5-cif/permissionkeys/permissionkey/access/group':
+			case '/concrete5-cif/singlepages':
+			case '/concrete5-cif/singlepages/page/attributes':
+			case '/concrete5-cif/singlepages/page/attributes/attributekey':
+			case '/concrete5-cif/stacks':
+			case '/concrete5-cif/stacks/stack/area/block/data':
 			case '/concrete5-cif/stacks/stack/area/block/link':
+			case '/concrete5-cif/systemcaptcha':
 			case '/concrete5-cif/systemcontenteditorsnippets':
-			case '/concrete5-cif/blocktypesets':
-			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
-			case '/concrete5-cif/composercontroltypes':
-			case '/concrete5-cif/gatheringsources':
-			case '/concrete5-cif/gatheringitemtemplates':
-			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate/feature':
-			case '/concrete5-cif/conversationeditors':
-			case '/concrete5-cif/conversationratingtypes':
-			case '/concrete5-cif/pagetemplates':
-			case '/concrete5-cif/imageeditor_controlsets':
-			case '/concrete5-cif/imageeditor_components':
-			case '/concrete5-cif/imageeditor_filters':
-			case '/concrete5-cif/pagetypepublishtargettypes':
-			case '/concrete5-cif/pagetypecomposercontroltypes':
+			case '/concrete5-cif/taskpermissions':
+			case '/concrete5-cif/taskpermissions/taskpermission/access':
+			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
+			case '/concrete5-cif/themes':
+			case '/concrete5-cif/themes/theme':
+			case '/concrete5-cif/workflowprogresscategories':
+			case '/concrete5-cif/workflowprogresscategories/category':
+			case '/concrete5-cif/workflowtypes':
 			case '/styles':
 				// Skip this node
 				break;
-			case '/concrete5-cif/config':
-			case '/concrete5-cif/stacks/stack/area/block/data/record':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
 			case '/concrete5-cif/banned_words':
-			case '/concrete5-cif/flag_types':
-			case '/concrete5-cif/features':
-			case '/concrete5-cif/gatheringitemtemplatetypes':
+			case '/concrete5-cif/config':
 			case '/concrete5-cif/featurecategories':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
+			case '/concrete5-cif/features':
+			case '/concrete5-cif/flag_types':
+			case '/concrete5-cif/gatheringitemtemplatetypes':
 			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data/record':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
+			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
 			case '/concrete5-cif/sociallinks':
+			case '/concrete5-cif/stacks/stack/area/block/data/record':
 				// Skip this node and its children
 				return;
-			case '/concrete5-cif/pagetypes/pagetype':
 			case '/concrete5-cif/pages/page/area/block':
-			case '/concrete5-cif/systemcaptcha/library':
-			case '/concrete5-cif/workflowtypes/workflowtype':
+			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block':
+			case '/concrete5-cif/pagetypes/pagetype':
+			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
+			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
 			case '/concrete5-cif/stacks/stack':
 			case '/concrete5-cif/stacks/stack/area':
 			case '/concrete5-cif/stacks/stack/area/block':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
-			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block':
+			case '/concrete5-cif/systemcaptcha/library':
+			case '/concrete5-cif/workflowtypes/workflowtype':
 				// Translatable text: name attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				break;
@@ -2304,11 +2303,10 @@ class POEntry {
 				// Translatable text: a concrete5 ConversationRatingType name
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ConversationRatingTypeName' : '');
 				break;
-			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/pages/page':
+			case '/concrete5-cif/pagetypes/pagetype/page':
 			case '/concrete5-cif/singlepages/page':
 			case '/concrete5-cif/taskpermissions/taskpermission':
-			case '/concrete5-cif/pagetypes/pagetype/page':
 				// Translatable text: name attribute, description attribute
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
 				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
@@ -2337,10 +2335,10 @@ class POEntry {
 				// Translatable text: name attribute (it's a concrete5 job set name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');
 				break;
-			case '/concrete5-cif/singlepages/page/area':
 			case '/concrete5-cif/pages/page/area':
-			case '/concrete5-cif/pagetypes/pagetype/page/area':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area':
+			case '/concrete5-cif/pagetypes/pagetype/page/area':
+			case '/concrete5-cif/singlepages/page/area':
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AreaName' : '');
 				break;
 			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate/page':
