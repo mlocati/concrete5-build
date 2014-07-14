@@ -2238,6 +2238,7 @@ class POEntry {
 			case '/concrete5-cif/featurecategories':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
 			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data/record':
+			case '/concrete5-cif/sociallinks':
 				// Skip this node and its children
 				return;
 			case '/concrete5-cif/pagetypes/pagetype':
