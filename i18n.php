@@ -2192,6 +2192,32 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/blocks':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/backgroundColor':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/backgroundRepeat':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderWidth':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderColor':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderStyle':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderRadius':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/baseFontSize':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/alignment':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/textColor':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/linkColor':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingTop':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingBottom':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingLeft':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingRight':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginTop':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginBottom':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginLeft':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginRight':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/rotate':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowHorizontal':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowVertical':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowBlur':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowSpread':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowColor':
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/customClass':
 			case '/concrete5-cif/pagetypes/pagetype/formlayout':
 			case '/concrete5-cif/pagetypes/pagetype/output':
 			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate':
@@ -2224,6 +2250,13 @@ class POEntry {
 			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
 			case '/concrete5-cif/themes':
 			case '/concrete5-cif/themes/theme':
+			case '/concrete5-cif/thumbnailtypes':
+			case '/concrete5-cif/thumbnailtypes/thumbnailtype':
+			case '/concrete5-cif/trees':
+			case '/concrete5-cif/trees/tree':
+			case '/concrete5-cif/trees/tree/topic':
+			case '/concrete5-cif/trees/tree/topic_category':
+			case '/concrete5-cif/trees/tree/topic_category/topic':
 			case '/concrete5-cif/workflowprogresscategories':
 			case '/concrete5-cif/workflowprogresscategories/category':
 			case '/concrete5-cif/workflowtypes':
