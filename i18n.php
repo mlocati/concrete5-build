@@ -2144,6 +2144,7 @@ class POEntry {
 			case '/concrete5-cif/attributecategories':
 			case '/concrete5-cif/attributecategories/category':
 			case '/concrete5-cif/attributekeys':
+			case '/concrete5-cif/attributekeys/attributekey/tree':
 			case '/concrete5-cif/attributekeys/attributekey/type':
 			case '/concrete5-cif/attributekeys/attributekey/type/options':
 			case '/concrete5-cif/attributesets':
