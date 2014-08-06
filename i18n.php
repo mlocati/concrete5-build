@@ -2144,7 +2144,6 @@ class POEntry {
 			case '/concrete5-cif/attributecategories':
 			case '/concrete5-cif/attributecategories/category':
 			case '/concrete5-cif/attributekeys':
-			case '/concrete5-cif/attributekeys/attributekey/tree':
 			case '/concrete5-cif/attributekeys/attributekey/type':
 			case '/concrete5-cif/attributekeys/attributekey/type/options':
 			case '/concrete5-cif/attributesets':
@@ -2178,7 +2177,9 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/block/stack':
 			case '/concrete5-cif/pages/page/attributes':
 			case '/concrete5-cif/pages/page/attributes/attributekey':
+			case '/concrete5-cif/pages/page/attributes/attributekey/topics':
 			case '/concrete5-cif/pages/page/attributes/attributekey/value':
+			case '/concrete5-cif/pages/page/attributes/attributekey/value/fID':
 			case '/concrete5-cif/pages/page/attributes/attributekey/value/option':
 			case '/concrete5-cif/pagetemplates':
 			case '/concrete5-cif/pagetypecomposercontroltypes':
@@ -2192,32 +2193,6 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/blocks':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/backgroundColor':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/backgroundRepeat':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderWidth':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderColor':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderStyle':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/borderRadius':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/baseFontSize':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/alignment':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/textColor':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/linkColor':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingTop':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingBottom':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingLeft':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/paddingRight':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginTop':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginBottom':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginLeft':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/marginRight':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/rotate':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowHorizontal':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowVertical':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowBlur':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowSpread':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/boxShadowColor':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style/customClass':
 			case '/concrete5-cif/pagetypes/pagetype/formlayout':
 			case '/concrete5-cif/pagetypes/pagetype/output':
 			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate':
@@ -2251,12 +2226,8 @@ class POEntry {
 			case '/concrete5-cif/themes':
 			case '/concrete5-cif/themes/theme':
 			case '/concrete5-cif/thumbnailtypes':
-			case '/concrete5-cif/thumbnailtypes/thumbnailtype':
 			case '/concrete5-cif/trees':
 			case '/concrete5-cif/trees/tree':
-			case '/concrete5-cif/trees/tree/topic':
-			case '/concrete5-cif/trees/tree/topic_category':
-			case '/concrete5-cif/trees/tree/topic_category/topic':
 			case '/concrete5-cif/workflowprogresscategories':
 			case '/concrete5-cif/workflowprogresscategories/category':
 			case '/concrete5-cif/workflowtypes':
@@ -2274,6 +2245,7 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/style';
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
 			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/blocks/block';
+			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style':
 			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
 			case '/concrete5-cif/sociallinks':
 			case '/concrete5-cif/stacks/stack/area/block/data/record':
@@ -2302,6 +2274,23 @@ class POEntry {
 			case '/concrete5-cif/attributekeys/attributekey':
 				// Translatable text: name attribute (it's a concrete5 attribute key name)
 				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeKeyName' : '');
+				break;
+			case '/concrete5-cif/attributekeys/attributekey/tree':
+				// Translatable text: name attribute (it's a concrete5 attribute key name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TreeName' : '');
+				break;
+			case '/concrete5-cif/thumbnailtypes/thumbnailtype':
+				// Translatable text: name attribute (it's a concrete5 attribute key name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ThumbnailTypeName' : '');
+				break;
+			case '/concrete5-cif/trees/tree/topic_category':
+				// Translatable text: name attribute (it's a concrete5 attribute key name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TopicCategoryName' : '');
+				break;
+			case '/concrete5-cif/trees/tree/topic':
+			case '/concrete5-cif/trees/tree/topic_category/topic':
+				// Translatable text: name attribute (it's a concrete5 attribute key name)
+				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TopicName' : '');
 				break;
 			case '/concrete5-cif/attributesets/attributeset':
 				// Translatable text: name attribute (it's a concrete5 attribute set name)
@@ -2426,6 +2415,10 @@ class POEntry {
 			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set/control':
 				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetControlCustomLabel' : '');
 				break;
+			case '/concrete5-cif/pages/page/attributes/attributekey/topics/topic':
+				// Translatable text: node value
+				self::ReadNodeValue($filenameRel, $node, $entries, 'Topic');
+				break;
 			default:
 				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel . "\n\nNode:\n" . $node->ownerDocument->saveXML($node));
 		}
@@ -2460,14 +2453,16 @@ class POEntry {
 	* @param string $filenameRel The relative file name of the xml file being read.
 	* @param DOMNode $node The current node.
 	* @param ref array[POEntry] $entries Will be populated with found entries.
+	* @param string $context [default: ''] The translation context
 	*/
-	private static function ReadNodeValue($filenameRel, $node, &$entries) {
+	private static function ReadNodeValue($filenameRel, $node, &$entries, $context = '') {
 		$value = $node->nodeValue;
 		if(strlen($value)) {
-			if(!array_key_exists($value, $entries)) {
-				$entries[$value] = new POEntrySingle($value);
+			$key = strlen($context) ? "$context\x04$value" : $value;
+			if(!array_key_exists($key, $entries)) {
+				$entries[$key] = new POEntrySingle($value, array(), array(), $context);
 			}
-			$entries[$value]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
+			$entries[$key]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
 		}
 	}
 
