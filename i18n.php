@@ -2168,6 +2168,7 @@ class POEntry {
 			case '/concrete5-cif/jobs/job':
 			case '/concrete5-cif/jobsets':
 			case '/concrete5-cif/jobsets/jobset/job':
+			case '/concrete5-cif/pagefeeds':
 			case '/concrete5-cif/pages':
 			case '/concrete5-cif/pages/page/area/block/arealayout':
 			case '/concrete5-cif/pages/page/area/block/arealayout/columns':
@@ -2352,6 +2353,18 @@ class POEntry {
 			case '/concrete5-cif/pages/page/area/block/data/record/title':
 				// Translatable text: node value
 				self::ReadNodeValue($filenameRel, $node, $entries);
+				break;
+			case '/concrete5-cif/pagefeeds/feed':
+				// Skip this node and *almost* all its children
+				$childnodesLimit = array('title', 'description');
+				break;
+			case '/concrete5-cif/pagefeeds/feed/title':
+				// Translatable text: node value
+				self::ReadNodeValue($filenameRel, $node, $entries, 'FeedTitle');
+				break;
+			case '/concrete5-cif/pagefeeds/feed/description':
+				// Translatable text: node value
+				self::ReadNodeValue($filenameRel, $node, $entries, 'FeedDescription');
 				break;
 			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
 				switch($node->parentNode->getAttribute('handle')) {
