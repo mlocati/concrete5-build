@@ -44,7 +44,12 @@ function SetupIni() {
 function ErrorCatcher($errno, $errstr, $errfile, $errline) {
 	throw new Exception("$errstr in $errfile at line $errline", $errno);
 }
-
+/** Skip errors
+* @return boolean
+*/
+function NullErrorCatcher() {
+	return true;
+}
 /** End the execution for the specified exception.
 * @param Exception $exception
 */
@@ -301,18 +306,48 @@ class Options {
 		if(!is_dir($webroot)) {
 			throw new Exception($webroot . ' is not the valid concrete5 web root directory (it does not exist).');
 		}
-		if(!is_file($fn = Enviro::MergePath($webroot, 'concrete/config/version.php'))) {
+		if(is_file($fn = Enviro::MergePath($webroot, 'concrete/config/version.php'))) {
+			$versionSchema = 1;
+		}
+		elseif(is_file($fn = Enviro::MergePath($webroot, 'concrete/config/concrete.php'))) {
+			$versionSchema = 2;
+		}
+		else {
 			throw new Exception($webroot . ' is not the valid concrete5 web root directory (the version file does not exist).');
 		}
 		$fc = Enviro::GetEvaluableContent($fn);
+		
+		$preErrorHandler = set_error_handler('NullErrorCatcher');
+		$preErrorReporting = ini_get('error_reporting');
+		@ini_set('error_reporting', 0);
 		@ob_start();
 		$evalued = eval($fc);
 		@ob_end_clean();
-		if($evalued === false) {
-			throw new Exception("Unable to parse the version of CONCRETE5 (file '$fn').");
+		if($preErrorReporting) {
+			@ini_set('error_reporting', $preErrorReporting);
 		}
-		if(empty($APP_VERSION)) {
-			throw new Exception("Unable to parse the concrete5 version file '$fn'.");
+		if($preErrorReporting) {
+			@set_error_handler($preErrorHandler);
+		}
+		if($evalued === false) {
+			throw new Exception("Unable to parse the version with schema $versionSchema of concrete5 (file '$fn').");
+		}
+		switch($versionSchema) {
+		    case 1:
+				if(empty($APP_VERSION)) {
+					throw new Exception("Unable to parse the concrete5 version file '$fn' (schema: $versionSchema).");
+				}
+				break;
+		    case 2:
+		    	if(is_array($evalued) && array_key_exists('version', $evalued) && is_string($evalued['version']) && strlen($evalued['version'])) {
+		    		$APP_VERSION = $evalued['version'];
+		    	}
+		    	else {
+		    		throw new Exception("Unable to parse the concrete5 version file '$fn' (schema: $versionSchema).");
+		    	}
+		    	break;
+		    default:
+		    	throw new Exception("Version schema $versionSchema not implemented while reading version file '$fn'.");
 		}
 		return $APP_VERSION;
 	}
