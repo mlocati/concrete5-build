@@ -945,21 +945,41 @@ class PackageInfo {
 			throw new Exception("'" . $package . "' is not a valid package name ('$fn' not found).");
 		}
 		$fc = "\n" . Enviro::GetEvaluableContent($fn);
-		if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+Package\s*\{/i', $fc, $m)) {
-			throw new Exception("'" . $package . "' can't be parsed for a version.");
+		$namespace = '';
+		if(version_compare(Options::GetVersionOfConcrete5(), '5.7') < 0) {
+			if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+(Package)\b/i', $fc, $m)) {
+				throw new Exception("'" . $package . "' can't be parsed for a version.");
+			}
+		}
+		else {
+			if(preg_match('/[\r\n]namespace\s+([^;\s]+?)\s*;/', $fc, $m)) {
+			    $namespace = trim(trim($m[1]), '\\');
+			    if(strlen($namespace)) {
+			    	$namespace = $namespace . '\\';
+			    }
+			}
+			if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+((?:[\\\\\w]*\\\\)?Package)\b/i', $fc, $m)) {
+				throw new Exception("'" . $package . "' can't be parsed for a version.");
+			}
 		}
 		$packageClassOriginal = $m[1];
+		$extendedClass = $m[2];
 		for($x = 0; ; $x++) {
 			$packageClassRenamed = $packageClassOriginal . $x;
-			if(!class_exists($packageClassRenamed)) {
+			if(!class_exists($namespace . $packageClassRenamed)) {
 				if(stripos($fc, $packageClassRenamed) === false) {
 					break;
 				}
 			}
 		}
 		$fc = preg_replace('/\\b' . preg_quote($packageClassOriginal) . '\\b/i', $packageClassRenamed, $fc);
-		if(!class_exists('Package')) {
-			eval('class Package {}');
+		if(!class_exists($extendedClass)) {
+			if(preg_match('/^\\\\?(.+)\\\\(\w+)$/', $extendedClass, $m)) {
+				eval("namespace {$m[1]};\nclass {$m[2]} {}");
+			}
+			else {
+				eval('class ' . $extendedClass . ' {}');
+			}
 		}
 		@ob_start();
 		$evalued = eval($fc);
@@ -969,7 +989,7 @@ class PackageInfo {
 		}
 		if(!class_exists("VersionGetter_$packageClassRenamed")) {
 			eval(<<<EOT
-				class VersionGetter_$packageClassRenamed extends $packageClassRenamed {
+				class VersionGetter_$packageClassRenamed extends {$namespace}$packageClassRenamed {
 					private function __construct() {
 					}
 					public static function GV() {
