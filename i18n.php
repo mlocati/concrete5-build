@@ -946,7 +946,7 @@ class PackageInfo {
 		}
 		$fc = "\n" . Enviro::GetEvaluableContent($fn);
 		if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+Package\s*\{/i', $fc, $m)) {
-			throw new Exception("'" . self::$package . "' can't be parsed for a version.");
+			throw new Exception("'" . $package . "' can't be parsed for a version.");
 		}
 		$packageClassOriginal = $m[1];
 		for($x = 0; ; $x++) {
