@@ -1,7 +1,8 @@
 # Building Assets Required for concrete5
 
 ## i18n.php
-##### Requirements: php command line 5.3, gettext tools (namely `xgettext`, `msgmerge` and `msgfmt`) installed and in your $PATH (but the script verifies all the dependencies and suggests how to proceed).
+##### Requirements: php command line 5.3, gettext tools (namely `xgettext`, `msgmerge` and `msgfmt`) installed and in your $PATH (but the script verifies all the dependencies and suggests how to proceed). Windows users can download everything from this page http://mlocati.github.io/gettext-iconv-windows/.
+
 This shell php script manage localization files (.pot templates, .po translations and .mo compiled translations), for both the concrete5 core and for custom packages.
 Launch it with `php i18n.php --help` for help & options, or with `php i18n.php --interactive` for an interactive session.
 
