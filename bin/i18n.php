@@ -398,7 +398,13 @@ class ToolOptions {
 				$hDir = opendir($dir);
 				while(($item = readdir($hDir)) !== false) {
 					if((strpos($item, '.') !== 0) && is_dir(Enviro::MergePath($dir, $item))) {
-						$languages[] = $item;
+						switch($item) {
+							case 'site':
+								break;
+							default:
+								$languages[] = $item;
+								break;
+						}
 					}
 				}
 				closedir($hDir);
@@ -888,10 +894,10 @@ class PackageInfo {
 		}
 		else {
 			if(preg_match('/[\r\n]namespace\s+([^;\s]+?)\s*;/', $fc, $m)) {
-			    $namespace = trim(trim($m[1]), '\\');
-			    if(strlen($namespace)) {
-			    	$namespace = $namespace . '\\';
-			    }
+				$namespace = trim(trim($m[1]), '\\');
+				if(strlen($namespace)) {
+					$namespace = $namespace . '\\';
+				}
 			}
 			if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+((?:[\\\\\w]*\\\\)?Package)\b/i', $fc, $m)) {
 				throw new Exception("'" . $package . "' can't be parsed for a version.");
@@ -1192,9 +1198,9 @@ class POTFile extends POxFile {
 	}
 
 	/** Create a .pot file starting from sources.
-	 * @param PackageInfo $packageInfo The info about the .pot file to be created (it'll be overwritten if already existing).
-	 * @throws Exception Throws an Exception in case of errors.
-	 */
+	* @param PackageInfo $packageInfo The info about the .pot file to be created (it'll be overwritten if already existing).
+	* @throws Exception Throws an Exception in case of errors.
+	*/
 	public static function CreateNew($packageInfo) {
 		Console::WriteLine('* CREATING .POT FILE ' . $packageInfo->PotName . ' FOR ' . ($packageInfo->IsConcrete5 ? 'concrete5 core' : $packageInfo->Package) . ' v' . $packageInfo->Version);
 	
