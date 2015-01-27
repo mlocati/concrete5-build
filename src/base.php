@@ -8,12 +8,14 @@ if(!defined('CONSOLE_LINELENGTH')) {
 	define('CONSOLE_LINELENGTH', 80);
 }
 if(!defined('PHP_MIN_VERSION')) {
-	define('PHP_MIN_VERSION', '5.1');
+	define('PHP_MIN_VERSION', '5.3');
 }
 if(version_compare(PHP_VERSION, PHP_MIN_VERSION, '<')) {
 	Console::WriteLine('Minimum required php version: ' . PHP_MIN_VERSION . ', your is ' . PHP_VERSION, true);
 	die(1);
 }
+
+require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 Options::Initialize();
 
@@ -55,6 +57,7 @@ function NullErrorCatcher() {
 */
 function DieForException($exception) {
 	Console::WriteLine($exception->getMessage(), true);
+	Console::WriteLine($exception->getTraceAsString(), true);
 	if(is_string(Options::$InitialFolder)) {
 		@chdir(Options::$InitialFolder);
 	}

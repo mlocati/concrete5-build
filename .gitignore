@@ -13,3 +13,6 @@ __MACOSX
 
 # ignore win32 binary tools
 /win32tools/
+
+# ignore Composer stuff
+/vendor
