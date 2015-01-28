@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "gettext/gettext",
-            "version": "v3.0",
+            "version": "v3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oscarotero/Gettext.git",
-                "reference": "e54627b820b9ff838934134ce403e22a7e86dd02"
+                "reference": "5584c64b63e546cbfdb215555c7e4bc1c00a33e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/e54627b820b9ff838934134ce403e22a7e86dd02",
-                "reference": "e54627b820b9ff838934134ce403e22a7e86dd02",
+                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/5584c64b63e546cbfdb215555c7e4bc1c00a33e0",
+                "reference": "5584c64b63e546cbfdb215555c7e4bc1c00a33e0",
                 "shasum": ""
             },
             "require": {
@@ -54,7 +54,7 @@
                 "po",
                 "translation"
             ],
-            "time": "2015-01-22 21:42:54"
+            "time": "2015-01-27 20:57:26"
         },
         {
             "name": "mlocati/concrete5-translation-library",
