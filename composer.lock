@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/oscarotero/Gettext.git",
-                "reference": "5584c64b63e546cbfdb215555c7e4bc1c00a33e0"
+                "reference": "e6598d172881dd8eb6232d6321784a01fd6a47d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/5584c64b63e546cbfdb215555c7e4bc1c00a33e0",
-                "reference": "5584c64b63e546cbfdb215555c7e4bc1c00a33e0",
+                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/e6598d172881dd8eb6232d6321784a01fd6a47d7",
+                "reference": "e6598d172881dd8eb6232d6321784a01fd6a47d7",
                 "shasum": ""
             },
             "require": {
@@ -54,24 +54,24 @@
                 "po",
                 "translation"
             ],
-            "time": "2015-01-27 20:57:26"
+            "time": "2015-01-28 15:27:55"
         },
         {
             "name": "mlocati/concrete5-translation-library",
-            "version": "1.0.1",
+            "version": "1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mlocati/concrete5-translation-library.git",
-                "reference": "d26f7a338092110a2fc660cd9c4ed3cd1455cbca"
+                "reference": "dded8e9d1632b299ce3022f6549343f07e2b8966"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mlocati/concrete5-translation-library/zipball/d26f7a338092110a2fc660cd9c4ed3cd1455cbca",
-                "reference": "d26f7a338092110a2fc660cd9c4ed3cd1455cbca",
+                "url": "https://api.github.com/repos/mlocati/concrete5-translation-library/zipball/dded8e9d1632b299ce3022f6549343f07e2b8966",
+                "reference": "dded8e9d1632b299ce3022f6549343f07e2b8966",
                 "shasum": ""
             },
             "require": {
-                "gettext/gettext": "3.*",
+                "gettext/gettext": "3.1.*",
                 "php": ">=5.3.0"
             },
             "type": "library",
@@ -104,7 +104,7 @@
                 "translate",
                 "translation"
             ],
-            "time": "2015-01-27 13:17:52"
+            "time": "2015-01-28 15:52:06"
         }
     ],
     "packages-dev": [],
