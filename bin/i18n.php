@@ -1,7 +1,8 @@
+#!/usr/bin/php
 <?php
 define('C5_BUILD', true);
-define('PHP_MIN_VERSION', '5.3');
-require_once dirname(__FILE__) . '/base.php';
+
+require_once dirname(__FILE__) . '/../src/base.php';
 
 try {
 	if(ToolOptions::$Interactive) {
@@ -52,30 +53,10 @@ class ToolOptions {
 	*/
 	public static $PotContactConcrete5Default;
 
-	/** The default folders to be excluded from .pot generation for concrete5 (relative to web root).
-	* @var array[string]
-	*/
-	public static $ExcludeDirsFromPotConcrete5Default;
-
-	/** The default folders to be excluded from .pot generation for packages (relative to the folder of the package).
-	* @var array[string]
-	*/
-	public static $ExcludeDirsFromPotPackageDefault;
-
 	/** List of info about concrete5 / packages.
 	* @var array[PackageInfo]
 	*/
 	public static $Packages;
-
-	/** Default value of 'indent' option.
-	* @var bool
-	*/
-	public static $IndentDefault;
-
-	/** Have we to create indented .pot/.po files?
-	* @var bool
-	*/
-	public static $Indent;
 
 	/** List of languages for which we have to create/update .po files. Each array item is an array with the keys <b>language</b> (required) and <b>country</b> (optional).
 	* @var array
@@ -95,9 +76,6 @@ class ToolOptions {
 	/** Initialize the default options. */
 	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'http://www.concrete5.org/developers/bugs/';
-		self::$Indent = self::$IndentDefault = false;
-		self::$ExcludeDirsFromPotConcrete5Default = array('concrete/libraries/3rdparty', 'concrete/vendor');
-		self::$ExcludeDirsFromPotPackageDefault = array('libraries/3rdparty');
 		self::$Packages = array();
 		self::$Languages = array();
 		self::$Interactive = false;
@@ -131,14 +109,12 @@ class ToolOptions {
 		$options['--list-languages'] = array('description' => 'list all the usable languages');
 		$options['--list-countries'] = array('description' => 'list all the usable countries');
 		$options['--interactive'] = array('description' => 'start an interactive session');
-		$options['--indent'] = array('helpValue' => '<yes|no>', 'description' => 'set to yes to generate indented .pot/.po files, false for not-indented generation (default: ' . (self::$IndentDefault ? 'yes' : 'no') . ')');
 		$options['--languages'] = array('helpValue' => '<LanguagesCode>', 'description' => 'list of comma-separated languages for which create the .po files (default: work on existing languages)');
 		$options['--package'] = array('helpValue' => '<packagename>', 'description' => 'adds a package. Subsequent arguments are relative to the latest package (or to concrete5 itself to ');
 		$options['--createpot'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .pot file, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--createpo'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--compile'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .mo files from .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--potname'] = array('helpValue' => '<filename>', 'description' => '(For core and/or each package) name of the .pot filename (just the name, without path: it\'ll be saved in the \'languages\' folder)');
-		$options['--excludedirfrompot'] = array('helpValue' => '<dir>', 'description' => '(For core and/or each package) folder which may not be parsed when creating a.pot file. To specify multiple values you can specify this argument more than once (default for concrete5: ' . implode(self::$ExcludeDirsFromPotConcrete5Default), ', default for packages: ' . implode(self::$ExcludeDirsFromPotPackageDefault, ', ') . ')');
 		$options['--potcontact'] = array('helpValue' => '<email|url>', 'description' => '(For core and/or each package) email address or URL to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
 	}
 
@@ -172,9 +148,6 @@ class ToolOptions {
 				die(0);
 			case '--interactive':
 				self::$Interactive = true;
-				return true;
-			case '--indent':
-				self::$Indent = Options::ArgumentToBool($argument, $value);
 				return true;
 			case '--package':
 				if(!strlen($value)) {
@@ -220,17 +193,6 @@ class ToolOptions {
 				return true;
 			case '--potcontact':
 				self::$InitializeData['currentPackage']->PotContact = $value;
-				return true;
-			case '--excludedirfrompot':
-				if(!strlen($value)) {
-					self::$InitializeData['currentPackage']->ExcludeDirsFromPot = array();
-				}
-				else {
-					if(!is_array(self::$InitializeData['currentPackage']->ExcludeDirsFromPot)) {
-						self::$InitializeData['currentPackage']->ExcludeDirsFromPot = array();
-					}
-					self::$InitializeData['currentPackage']->ExcludeDirsFromPot[] = $value;
-				}
 				return true;
 			case '--languages':
 				if(!strlen($value)) {
@@ -436,7 +398,13 @@ class ToolOptions {
 				$hDir = opendir($dir);
 				while(($item = readdir($hDir)) !== false) {
 					if((strpos($item, '.') !== 0) && is_dir(Enviro::MergePath($dir, $item))) {
-						$languages[] = $item;
+						switch($item) {
+							case 'site':
+								break;
+							default:
+								$languages[] = $item;
+								break;
+						}
 					}
 				}
 				closedir($hDir);
@@ -504,7 +472,6 @@ class Interactive {
 			self::ShowEntry($validOptions[] = 'C', 'Work on concrete5 core');
 			self::ShowEntry($validOptions[] = 'P', 'Work on a concrete5 package');
 			self::ShowEntry($validOptions[] = 'W', 'Change webroot', 'Current value: ' . Options::$WebrootFolder);
-			self::ShowEntry($validOptions[] = 'I', 'Change indentation', 'Current value: ' . (ToolOptions::$Indent ? 'yes' : 'no'));
 			self::ShowEntry($validOptions[] = 'L', 'Change .po languages', 'Current value: ' . (empty(ToolOptions::$Languages) ? 'work on existing languages' : (count(ToolOptions::$Languages) . ' language' . ((count(ToolOptions::$Languages) == 1) ? '' : 's'))));
 			self::ShowEntry($validOptions[] = 'X', 'Exit');
 			switch(self::AskOption($validOptions)) {
@@ -646,26 +613,6 @@ class Interactive {
 							}
 							Options::$WebrootFolder = $r;
 							break;
-						}
-					}
-					break;
-				case 'I':
-					for(;;) {
-						Console::Write('Enter new indent value [Y/N]: ');
-						$s = trim(Console::ReadLine());
-						if(!strlen($s)) {
-							Console::WriteLine('Skipped.');
-							break;
-						}
-						else {
-							$b = Options::StringToBool($s);
-							if(is_null($b)) {
-								Console::WriteLine('Invalid value!');
-							}
-							else {
-								ToolOptions::$Indent = $b;
-								break;
-							}
 						}
 					}
 					break;
@@ -864,11 +811,6 @@ class PackageInfo {
 	*/
 	public $PotContact;
 
-	/** List of dirs to exclude.
-	* @var string
-	*/
-	public $ExcludeDirsFromPot;
-
 	/** True if we have to create the .pot file.
 	* @var bool
 	*/
@@ -927,7 +869,6 @@ class PackageInfo {
 			$this->IsConcrete5 = true;
 			$this->PotContact = ToolOptions::$PotContactConcrete5Default;
 		}
-		$this->ExcludeDirsFromPot = null;
 		$this->CreatePot = null;
 		$this->CreatePo = null;
 		$this->Compile = null;
@@ -953,10 +894,10 @@ class PackageInfo {
 		}
 		else {
 			if(preg_match('/[\r\n]namespace\s+([^;\s]+?)\s*;/', $fc, $m)) {
-			    $namespace = trim(trim($m[1]), '\\');
-			    if(strlen($namespace)) {
-			    	$namespace = $namespace . '\\';
-			    }
+				$namespace = trim(trim($m[1]), '\\');
+				if(strlen($namespace)) {
+					$namespace = $namespace . '\\';
+				}
 			}
 			if(!preg_match('/[\r\n]\s*class[\r\n\s]+([^\s\r\n]+)[\r\n\s]+extends[\r\n\s]+((?:[\\\\\w]*\\\\)?Package)\b/i', $fc, $m)) {
 				throw new Exception("'" . $package . "' can't be parsed for a version.");
@@ -1022,9 +963,6 @@ EOT
 			if(is_null($this->Compile)) {
 				$this->Compile = (count(ToolOptions::$Packages) == 1) ? true : false;
 			}
-			if(is_null($this->ExcludeDirsFromPot)) {
-				$this->ExcludeDirsFromPot = ToolOptions::$ExcludeDirsFromPotConcrete5Default;
-			}
 			$this->Version = Options::GetVersionOfConcrete5();
 			if(version_compare($this->Version, '5.7') < 0) {
 				$this->DirectoryToPotify = 'concrete';
@@ -1048,9 +986,6 @@ EOT
 			}
 			if(is_null($this->Compile)) {
 				$this->Compile = true;
-			}
-			if(is_null($this->ExcludeDirsFromPot)) {
-				$this->ExcludeDirsFromPot = ToolOptions::$ExcludeDirsFromPotPackageDefault;
 			}
 			$this->Version = self::GetVersionOfPackage(Options::$WebrootFolder, $this->Package);
 			$this->DirectoryToPotify = 'packages/' . $this->Package;
@@ -1096,138 +1031,6 @@ EOT
 			$parent = Enviro::MergePath(Options::$WebrootFolder, 'packages', $this->Package);
 		}
 		return Enviro::MergePath($parent, 'languages', Language::NormalizeCode($language), 'LC_MESSAGES', 'messages.mo');
-	}
-
-	/** Returns a list of the available block type handles
-	* @return array
-	* @throws Exception
-	*/
-	public function getBlockHandles() {
-		$pathRel = $this->DirectoryToPotify . '/blocks';
-		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
-		$blockHandles = array();
-		if(@is_dir($pathAbs)) {
-			if(!($hDir = @opendir($pathAbs))) {
-				global $php_errormsg;
-				throw new Exception("Error opening '$pathAbs': $php_errormsg");
-			}
-			try {
-				while(($entry = @readdir($hDir)) !== false) {
-					if(strpos($entry, '.') !== 0) {
-						if(is_dir(Enviro::MergePath($pathAbs, $entry))) {
-							$blockHandles[] = $entry;
-						}
-					}
-				}
-			}
-			catch(Exception $x) {
-				@closedir($hDir);
-				throw $x;
-			}
-			@closedir($hDir);
-		}
-		return $blockHandles;
-	}
-
-	/** Returns a list of the available theme handles
-	* @return array
-	* @throws Exception
-	*/
-	public function getThemeHandles() {
-		$pathRel = $this->DirectoryToPotify . '/themes';
-		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
-		$themeHandles = array();
-		if(@is_dir($pathAbs)) {
-			if(!($hDir = @opendir($pathAbs))) {
-				global $php_errormsg;
-				throw new Exception("Error opening '$pathAbs': $php_errormsg");
-			}
-			try {
-				while(($entry = @readdir($hDir)) !== false) {
-					if(strpos($entry, '.') !== 0) {
-						if(is_dir(Enviro::MergePath($pathAbs, $entry))) {
-							$themeHandles[] = $entry;
-						}
-					}
-				}
-			}
-			catch(Exception $x) {
-				@closedir($hDir);
-				throw $x;
-			}
-			@closedir($hDir);
-		}
-		return $themeHandles;
-	}
-	/** Returns a list of theme preset files (.less) and their content
-	* @return array
-	* @throws Exception
-	*/
-	public function getThemePresetFilesAndContent($themeHandle) {
-		$pathRel = $this->DirectoryToPotify . '/themes/' . $themeHandle . '/css/presets';
-		$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
-		$presetFiles = array();
-		if(@is_dir($pathAbs)) {
-			if(!($hDir = @opendir($pathAbs))) {
-				global $php_errormsg;
-				throw new Exception("Error opening '$pathAbs': $php_errormsg");
-			}
-			try {
-				while(($entry = @readdir($hDir)) !== false) {
-					if(strpos($entry, '.') !== 0) {
-						if(preg_match('/.\\.less$/i', $entry)) {
-							$fileAbs = Enviro::MergePath($pathAbs, $entry);
-							if(is_file($fileAbs)) {
-								$content = @file_get_contents($fileAbs);
-								if($content === false) {
-									global $php_errormsg;
-									throw new Exception("Error reading '$fileAbs': $php_errormsg");
-								}
-								$presetFiles["$pathRel/$entry"] = str_replace("\r", "\n", str_replace("\r\n", "\n", $content));
-							}
-						}
-					}
-				}
-			}
-			catch(Exception $x) {
-				@closedir($hDir);
-				throw $x;
-			}
-			@closedir($hDir);
-		}
-		return $presetFiles;
-	}
-	/** Returns a list of the available (custom/composer) template files
-	* @param string $blockHandle
-	* @return array
-	* @throws Exception
-	*/
-	public function getBlockTypeTemplateFiles($blockHandle) {
-		$result = array();
-		foreach(array('templates', 'composer') as $subFolder) {
-			$result[$subFolder] = array();
-			$pathRel = $this->DirectoryToPotify . "/blocks/$blockHandle/$subFolder";
-			$pathAbs = Enviro::MergePath(Options::$WebrootFolder, $pathRel);
-			if(is_dir($pathAbs)) {
-				if(!($hDir = @opendir($pathAbs))) {
-					global $php_errormsg;
-					throw new Exception("Error opening '$pathAbs': $php_errormsg");
-				}
-				try {
-					while(($entry = @readdir($hDir)) !== false) {
-						if(strpos($entry, '.') !== 0) {
-							$result[$subFolder][] = "$pathRel/$entry";
-						}
-					}
-				}
-				catch(Exception $x) {
-					@closedir($hDir);
-					throw $x;
-				}
-				@closedir($hDir);
-			}
-		}
-		return $result;
 	}
 }
 
@@ -1307,32 +1110,11 @@ abstract class POxFile {
 		}
 	}
 
-	/** Add one/many entries to the entries of this instance.
-	* @param POEntry|array[POEntry] $entries The entry/entries to be merged with this instance.
-	*/
-	public function MergeEntries($entries) {
-		if(is_array($entries)) {
-			foreach($entries as $entry) {
-				$this->MergeEntries($entry);
-			}
-		}
-		else {
-			$hash = $entries->GetHash();
-			if(array_key_exists($hash, $this->Entries)) {
-				$this->Entries[$hash]->MergeWith($entries);
-			}
-			else {
-				$this->Entries[$hash] = $entries;
-			}
-		}
-	}
-
 	/** Save the data to file.
 	* @param string $filename The filename to save the data to (if existing it'll be overwritten).
-	* @param bool $indent Set to true to indent data, false otherwise (default: false).
 	* @throws Exception Throws an exception in case of errors.
 	*/
-	public function SaveAs($filename, $indent = false) {
+	public function SaveAs($filename) {
 		$tempFilename = Enviro::GetTemporaryFileName();
 		try {
 			if(!$hFile = @fopen($tempFilename, 'wb')) {
@@ -1342,7 +1124,7 @@ abstract class POxFile {
 			try {
 				$isFirst = true;
 				if($this->Header) {
-					$this->Header->SaveTo($hFile, $indent);
+					$this->Header->SaveTo($hFile);
 					$isFirst = false;
 				}
 				foreach($this->Entries as $entry) {
@@ -1352,7 +1134,7 @@ abstract class POxFile {
 					else {
 						fwrite($hFile, "\n");
 					}
-					$entry->SaveTo($hFile, $indent);
+					$entry->SaveTo($hFile);
 				}
 				fflush($hFile);
 			} catch(Exception $x) {
@@ -1421,205 +1203,35 @@ class POTFile extends POxFile {
 	*/
 	public static function CreateNew($packageInfo) {
 		Console::WriteLine('* CREATING .POT FILE ' . $packageInfo->PotName . ' FOR ' . ($packageInfo->IsConcrete5 ? 'concrete5 core' : $packageInfo->Package) . ' v' . $packageInfo->Version);
-		Console::Write('  Listing .php files... ');
-		$phpFiles = array();
-		self::GetFiles($packageInfo->DirectoryToPotify, 'php', $phpFiles, $packageInfo->ExcludeDirsFromPot);
-		if(!count($phpFiles)) {
-			throw new Exception('No source .php files found.');
-		}
-		Console::WriteLine(count($phpFiles) . ' files found.');
-		$xmlFiles = array();
-		$useContexts = true;
-		if($packageInfo->IsConcrete5 && (version_compare($packageInfo->Version, '5.6.1') < 0)) {
-			$useContexts = false;
-		}
-		if($packageInfo->IsConcrete5) {
-			Console::Write('  Listing .xml files... ');
-			self::GetFiles($packageInfo->DirectoryToPotify, 'xml', $xmlFiles, $packageInfo->ExcludeDirsFromPot);
-			if(!count($xmlFiles)) {
-				throw new Exception('No .xml files found.');
-			}
-			Console::WriteLine(count($xmlFiles) . ' files found.');
-		}
-		Console::Write('  Listing filename-based strings... ');
-		$fileBasedEntries = array();
-		if((!$packageInfo->IsConcrete5) || (version_compare($packageInfo->Version, '5.6.3RC1') >= 0)) {
-			foreach($packageInfo->getBlockHandles() as $blockHandle) {
-				foreach($packageInfo->getBlockTypeTemplateFiles($blockHandle) as $list) {
-					foreach($list as $rel) {
-						$name = basename($rel);
-						if(strpos($name, '.') !== false) {
-							$name = substr($name, 0, strrpos($name, '.'));
-						}
-						$name = ucwords(str_replace(array('_', '-', '/'), ' ', $name));
-						$key = "TemplateFileName\x04$name";
-						if(!array_key_exists($key, $fileBasedEntries)) {
-							$fileBasedEntries[$key] = new POEntrySingle($name, array(), array(), 'TemplateFileName');
-						}
-						$fileBasedEntries[$key]->Comments[] = '#: ' . $rel;
-					}
-				}
+	
+		$translations = new \Gettext\Translations();
+	
+		foreach(\C5TL\Parser::getAllParsers() as $parser) {
+			if($parser->canParseDirectory()) {
+				Console::Write('  Running parser "' . $parser->getParserName() . '"... ');
+				$parser->parseDirectory(Enviro::MergePath(Options::$WebrootFolder, $packageInfo->DirectoryToPotify) , $packageInfo->DirectoryToPotify, $translations);
+				Console::WriteLine('done.');
 			}
 		}
-		if((!$packageInfo->IsConcrete5) || (version_compare($packageInfo->Version, '5.7') >= 0)) {
-			foreach($packageInfo->getThemeHandles() as $themeHandle) {
-				foreach($packageInfo->getThemePresetFilesAndContent($themeHandle) as $presetFile => $lessData) {
-					// Strip multiline comments
-					$lessData = preg_replace_callback(
-						'|/\*.*?\*/|s',
-						function($m) {
-							return str_repeat("\n", substr_count($m[0], "\n"));
-						},
-						$lessData
-					);
-					$found = false;
-					foreach(array("'", '"') as $quote) {
-						if(preg_match('%(?:^|\\n|;)[ \\t]*@preset-name:\\s*' . $quote . '([^' . $quote . ']*)' . $quote . '\\s*(?:;|$)%s', $lessData, $m)) {
-							$line = false;
-							$p = strpos($lessData, $m[0]);
-							if($p !== false) {
-								$line = substr_count(substr($lessData, 0, $p), "\n") + 1;
-							}
-							$found = array('name' => $m[1], 'line' => $line);
-							break;
-						}
-					}
-					if($found) {
-						$name = $found['name'];
-						$key = "PresetName\x04$name";
-						if(!array_key_exists($key, $fileBasedEntries)) {
-							$fileBasedEntries[$key] = new POEntrySingle($name, array(), array(), 'PresetName');
-						}
-						$fileBasedEntries[$key]->Comments[] = '#: ' . $presetFile . (($found['line'] === false) ? '' : ":{$found['line']}");
-					}
-				}
-			}
-		}
-		Console::WriteLine(count($fileBasedEntries) . ' strings found.');
-		Console::Write('  Extracting strings from .php files... ');
-		$tempList = Enviro::GetTemporaryFileName();
+	
+		$tempPot = Enviro::GetTemporaryFileName();
+	
 		try {
-			if(@file_put_contents($tempList, implode("\n", $phpFiles)) === false) {
-				global $php_errormsg;
-				throw new Exception("Error writing to '$tempList': $php_errormsg");
+			\Gettext\Generators\Po::toFile($translations, $tempPot);
+			$pot = new POTFile($tempPot);
+			$pot->FixHeader($packageInfo);
+			$pot->FixFilesSlash();
+			$pot->FixI18NComments();
+			if(Enviro::GetOS() !== Enviro::OS_WIN) {
+				$pot->Replace_CRLF_LF();
 			}
-			$tempPot = Enviro::GetTemporaryFileName();
-			try {
-				@chdir(Options::$WebrootFolder);
-				$args = array();
-				$args[] = '--default-domain=messages'; // Domain
-				$args[] = '--output=' . escapeshellarg(basename($tempPot)); // Output .pot file name
-				$args[] = '--output-dir=' . escapeshellarg(dirname($tempPot)); // Output .pot folder name
-				$args[] = '--language=PHP'; // Source files are in php
-				$args[] = '--from-code=UTF-8'; // Source files are in utf-8
-				$args[] = '--add-comments=i18n'; // Place comment blocks preceding keyword lines in output file if they start with '// i18n: '
-				$args[] = '--keyword'; // Don't use default keywords
-				$args[] = '--keyword=t:1'; // Look for the first argument of the "t" function for extracting translatable text in singular form
-				$args[] = '--keyword=t2:1,2'; // Look for the first and second arguments of the "t2" function for extracting both the singular and plural forms
-				$args[] = '--keyword=tc:1c,2'; // Look for the first argument of the "tc" function for extracting translation context, and the second argument is the translatable text in singular form.
-				$args[] = '--no-escape'; // Do not use C escapes in output
-				$args[] = '--indent'; // Write using indented style
-				$args[] = '--add-location'; // Generate '#: filename:line' lines
-				$args[] = '--no-wrap'; // Do not break long message lines, longer than the output page width, into several lines
-				$args[] = '--files-from=' . escapeshellarg($tempList); // Get list of input files from file
-				Enviro::RunTool('xgettext', $args);
-				Console::WriteLine('done.');
-				if(!empty($xmlFiles)) {
-					Console::Write('  Extracting strings from .xml files... ');
-					$xmlEntries = POEntry::FromXmlFile($xmlFiles, $useContexts);
-					Console::WriteLine('done.');
-				}
-				Console::Write('  Loading .pot file... ');
-				$pot = new POTFile($tempPot);
-				Console::WriteLine('done.');
-				Console::Write('  Fixing .pot file... ');
-				$pot->FixHeader($packageInfo);
-				$pot->FixFilesSlash();
-				$pot->FixI18NComments();
-				if(Enviro::GetOS() !== Enviro::OS_WIN) {
-					$pot->Replace_CRLF_LF();
-				}
-				Console::WriteLine('done.');
-				if(!empty($xmlFiles)) {
-					Console::Write('  Merging strings from xml... ');
-					$pot->MergeEntries($xmlEntries);
-					Console::WriteLine('done.');
-				}
-				if(!empty($fileBasedEntries)) {
-					Console::Write('  Merging filename-based strings... ');
-					$pot->MergeEntries($fileBasedEntries);
-					Console::WriteLine('done.');
-				}
-				Console::Write('  Saving .pot file... ');
-				$pot->SaveAs($packageInfo->PotFullname, ToolOptions::$Indent);
-				Console::WriteLine('done.');
-				Console::WriteLine('  .pot file created: ' . $packageInfo->PotFullname);
-				@unlink($tempPot);
-				@unlink($tempList);
-			}
-			catch(Exception $x) {
-				@unlink($tempPot);
-				throw $x;
-			}
-		} catch(Exception $x) {
-			@unlink($tempList);
-			throw $x;
-		}
-	}
-
-	/** Sub-function called by POTFile::CreateNew to parse a sub-folder.
-	* @param string $relPath The relative path of the sub-folder to be analyzed.
-	* @param string $extension The lower-case extension of the files to retrieve (without initial dot).
-	* @param ref array $items Found files will be appended to this array.
-	* @throws Exception Throws an exception in case of errors.
-	*/
-	private static function GetFiles($relPath, $extension, &$items, $excludedDirs = array(), $_callback = false) {
-		global $options;
-		if(!$_callback) {
-			if(is_array($excludedDirs)) {
-				if(DIRECTORY_SEPARATOR != '/') {
-					foreach(array_keys($excludedDirs) as $i) {
-						$excludedDirs[$i] = str_replace('/', DIRECTORY_SEPARATOR, $excludedDirs[$i]);
-					}
-				}
-			}
-			else {
-				$excludedDirs = array();
-			}
-		}
-		$absPath = Enviro::MergePath(Options::$WebrootFolder, $relPath);
-		if(!($hDir = @opendir($absPath))) {
-			global $php_errormsg;
-			throw new Exception("Error opening '$absPath': $php_errormsg");
-		}
-		try {
-			while(($entry = @readdir($hDir)) !== false) {
-				$relPathSub = Enviro::MergePath($relPath, $entry);
-				$absPathSub = Enviro::MergePath($absPath, $entry);
-				if(is_dir($absPathSub)) {
-					switch($entry) {
-						case '.':
-						case '..':
-							break;
-						default:
-							if(array_search($relPathSub, $excludedDirs) === false) {
-								self::GetFiles($relPathSub, $extension, $items, $excludedDirs, true);
-							}
-							break;
-					}
-				}
-				else {
-					switch(strtolower(pathinfo($absPathSub, PATHINFO_EXTENSION))) {
-						case $extension:
-							$items[] = $relPathSub;
-							break;
-					}
-				}
-			}
-			closedir($hDir);
+			$pot->SaveAs($packageInfo->PotFullname);
+			Console::WriteLine('done.');
+			Console::WriteLine('  .pot file created: ' . $packageInfo->PotFullname);
+			@unlink($tempPot);
 		}
 		catch(Exception $x) {
-			@closedir($hDir);
+			@unlink($tempPot);
 			throw $x;
 		}
 	}
@@ -1782,7 +1394,6 @@ class POFile extends POxFile {
 			$args[] = '--previous'; // Keep the previous msgids of translated messages, marked with '#|', when adding the fuzzy marker to such messages.
 			$args[] = '--lang=' . $language; // Specify the 'Language' field to be used in the header entry
 			$args[] = '--force-po'; // Always write an output file even if it contains no message.
-			$args[] = '--indent'; // Write the .po file using indented style.
 			$args[] = '--add-location'; // Generate '#: filename:line' lines.
 			$args[] = '--no-wrap'; // Do not break long message lines
 			$args[] = '--output-file=' . escapeshellarg($tempPoDst); // Write output to specified file.
@@ -1795,7 +1406,7 @@ class POFile extends POxFile {
 			$poFile->FixHeader($packageInfo, $language);
 			Console::WriteLine('done.');
 			Console::Write('  Saving final .po file... ');
-			$poFile->SaveAs($poFullFilename, ToolOptions::$Indent);
+			$poFile->SaveAs($poFullFilename);
 			Console::WriteLine('done.');
 			@unlink($tempPoDst);
 			$tempPoDst = null;
@@ -1962,19 +1573,9 @@ class POEntry {
 	* @param string $prefix The prefix for each line (eg '#~ ' for obsolete items).
 	* @param string $name The name of the data to be saved.
 	* @param array[string] $array The data to be saved.
-	* @param bool $indent Should we indent data [default: false].
 	* @param bool $skipIfEmptyArray Should we skip data writing if the data to write is empty.
 	*/
-	protected static function ArrayToFile($hFile, $prefix, $name, $array, $indent = false, $skipIfEmptyArray = false) {
-		if($indent) {
-			if(strlen($name) < 7) {
-				$name .= str_repeat(' ', 7 - strlen($name));
-			}
-			$pre = str_repeat(' ', strlen($name) + 1);
-		}
-		else {
-			$pre = '';
-		}
+	protected static function ArrayToFile($hFile, $prefix, $name, $array, $skipIfEmptyArray = false) {
 		if(empty($array)) {
 			if(!$skipIfEmptyArray) {
 				fwrite($hFile, "$name \"\"\n");
@@ -1988,7 +1589,7 @@ class POEntry {
 					$first = false;
 				}
 				else {
-					fwrite($hFile, "$prefix$pre\"$line\"\n");
+					fwrite($hFile, "$prefix\"$line\"\n");
 				}
 			}
 		}
@@ -2079,452 +1680,14 @@ class POEntry {
 
 	/** Save the instance data to file (comments and context).
 	* @param resource $hFile The file to save the data to.
-	* @param bool $indent Set to true to indent data, false otherwise (default: false).
 	*/
-	protected function _saveTo($hFile, $indent = false) {
+	protected function _saveTo($hFile) {
 		usort($this->Comments, array(__CLASS__, 'CommentsSorter'));
 		foreach($this->Comments as $comment) {
 			fwrite($hFile, $comment);
 			fwrite($hFile, "\n");
 		}
-		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgctxt', $this->MsgCtxt, $indent, true);
-	}
-
-	/** Retrieves POEntry instances from one/many .xml files.
-	* @param string|array[string] $xmlFiles The .xml file(s) to read.
-	* @param bool $xmlContexts [default: false] Write contexts for the extracted strings?
-	* @return array[POEntry]
-	* @throws Exception Throws an Exception in case of errors.
-	*/
-	public static function FromXmlFile($xmlFiles, $xmlContexts = false) {
-		if(is_array($xmlFiles)) {
-			$result = array();
-			foreach($xmlFiles as $xmlFile) {
-				foreach(self::FromXmlFile($xmlFile, $xmlContexts) as $poEntry) {
-					$hash = $poEntry->GetHash();
-					if(array_key_exists($hash, $result)) {
-						$result[$hash]->MergeWith($poEntry);
-					}
-					else {
-						$result[$hash] = $poEntry;
-					}
-				}
-			}
-			return array_values($result);
-		}
-		else {
-			global $options;
-			$filenameRel = $xmlFiles;
-			$filenameAbs = Enviro::MergePath(Options::$WebrootFolder, $xmlFiles);
-			$xml = new DOMDocument();
-			if(!@$xml->load($filenameAbs)) {
-				global $php_errormsg;
-				throw new Exception("Error loading '$filename': $php_errormsg");
-			}
-			$entries = array();
-			switch($xml->documentElement->tagName) {
-				case 'concrete5-cif':
-				case 'styles':
-					self::ParseXmlNode($filenameRel, '', $xml->documentElement, $entries, $xmlContexts);
-					break;
-				case 'schema':
-				case 'access':
-				case 'doctrine-mapping':
-					break;
-				default:
-					throw new Exception('Unknown root node: ' . $xml->documentElement->tagName . ' in ' . $filenameRel);
-			}
-			return $entries;
-		}
-	}
-
-	/** Parse an xml node and retrieves any associated POEntry.
-	* @param string $filenameRel The relative file name of the xml file being read.
-	* @param string $prePath The path of the node containing the current node.
-	* @param DOMNode $node The current node.
-	* @param ref array[POEntry] $entries Will be populated with found entries.
-	* @param bool $xmlContexts [default: false] Write contexts for the extracted strings?
-	* @throws Exception Throws an Exception in case of errors.
-	*/
-	private static function ParseXmlNode($filenameRel, $prePath, $node, &$entries, $xmlContexts = false) {
-		switch(get_class($node)) {
-			case 'DOMElement':
-				break;
-			case 'DOMText':
-			case 'DOMCdataSection':
-			case 'DOMComment':
-				return;
-			default:
-				throw new Exception(get_class($node) . ' in ' . $filenameRel);
-		}
-		$path = $prePath . '/' . $node->tagName;
-		$childnodesLimit = null;
-		switch($path) {
-			case '/concrete5-cif':
-			case '/concrete5-cif/attributecategories':
-			case '/concrete5-cif/attributecategories/category':
-			case '/concrete5-cif/attributekeys':
-			case '/concrete5-cif/attributekeys/attributekey/type':
-			case '/concrete5-cif/attributekeys/attributekey/type/options':
-			case '/concrete5-cif/attributesets':
-			case '/concrete5-cif/attributesets/attributeset/attributekey':
-			case '/concrete5-cif/attributetypes':
-			case '/concrete5-cif/attributetypes/attributetype/categories':
-			case '/concrete5-cif/attributetypes/attributetype/categories/category':
-			case '/concrete5-cif/blocktypes':
-			case '/concrete5-cif/blocktypes/blocktype':
-			case '/concrete5-cif/blocktypesets':
-			case '/concrete5-cif/blocktypesets/blocktypeset/blocktype':
-			case '/concrete5-cif/composercontroltypes':
-			case '/concrete5-cif/conversationeditors':
-			case '/concrete5-cif/conversationratingtypes':
-			case '/concrete5-cif/gatheringitemtemplates':
-			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate/feature':
-			case '/concrete5-cif/gatheringsources':
-			case '/concrete5-cif/imageeditor_components':
-			case '/concrete5-cif/imageeditor_controlsets':
-			case '/concrete5-cif/imageeditor_filters':
-			case '/concrete5-cif/jobs':
-			case '/concrete5-cif/jobs/job':
-			case '/concrete5-cif/jobsets':
-			case '/concrete5-cif/jobsets/jobset/job':
-			case '/concrete5-cif/pagefeeds':
-			case '/concrete5-cif/pages':
-			case '/concrete5-cif/pages/page/area/block/arealayout':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data':
-			case '/concrete5-cif/pages/page/area/block/data':
-			case '/concrete5-cif/pages/page/area/block/stack':
-			case '/concrete5-cif/pages/page/attributes':
-			case '/concrete5-cif/pages/page/attributes/attributekey':
-			case '/concrete5-cif/pages/page/attributes/attributekey/topics':
-			case '/concrete5-cif/pages/page/attributes/attributekey/value':
-			case '/concrete5-cif/pages/page/attributes/attributekey/value/fID':
-			case '/concrete5-cif/pages/page/attributes/attributekey/value/option':
-			case '/concrete5-cif/pagetemplates':
-			case '/concrete5-cif/pagetypecomposercontroltypes':
-			case '/concrete5-cif/pagetypepublishtargettypes':
-			case '/concrete5-cif/pagetypes':
-			case '/concrete5-cif/pagetypes/pagetype/composer':
-			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout':
-			case '/concrete5-cif/pagetypes/pagetype/composer/items':
-			case '/concrete5-cif/pagetypes/pagetype/composer/items/attributekey':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/blocks':
-			case '/concrete5-cif/pagetypes/pagetype/formlayout':
-			case '/concrete5-cif/pagetypes/pagetype/output':
-			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data':
-			case '/concrete5-cif/pagetypes/pagetype/page/attributes':
-			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attribute':
-			case '/concrete5-cif/pagetypes/pagetype/page/attributes/attributekey':
-			case '/concrete5-cif/pagetypes/pagetype/pagetemplates':
-			case '/concrete5-cif/pagetypes/pagetype/pagetemplates/pagetemplate':
-			case '/concrete5-cif/pagetypes/pagetype/target':
-			case '/concrete5-cif/permissionaccessentitytypes':
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories':
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype/categories/category':
-			case '/concrete5-cif/permissioncategories':
-			case '/concrete5-cif/permissioncategories/category':
-			case '/concrete5-cif/permissionkeys':
-			case '/concrete5-cif/permissionkeys/permissionkey/access':
-			case '/concrete5-cif/permissionkeys/permissionkey/access/group':
-			case '/concrete5-cif/singlepages':
-			case '/concrete5-cif/singlepages/page/attributes':
-			case '/concrete5-cif/singlepages/page/attributes/attributekey':
-			case '/concrete5-cif/stacks':
-			case '/concrete5-cif/stacks/stack/area/block/data':
-			case '/concrete5-cif/stacks/stack/area/block/link':
-			case '/concrete5-cif/stacks/stack/area/blocks';
-			case '/concrete5-cif/systemcaptcha':
-			case '/concrete5-cif/systemcontenteditorsnippets':
-			case '/concrete5-cif/taskpermissions':
-			case '/concrete5-cif/taskpermissions/taskpermission/access':
-			case '/concrete5-cif/taskpermissions/taskpermission/access/group':
-			case '/concrete5-cif/themes':
-			case '/concrete5-cif/themes/theme':
-			case '/concrete5-cif/thumbnailtypes':
-			case '/concrete5-cif/trees':
-			case '/concrete5-cif/trees/tree':
-			case '/concrete5-cif/workflowprogresscategories':
-			case '/concrete5-cif/workflowprogresscategories/category':
-			case '/concrete5-cif/workflowtypes':
-			case '/styles':
-				// Skip this node
-				break;
-			case '/concrete5-cif/banned_words':
-			case '/concrete5-cif/config':
-			case '/concrete5-cif/featurecategories':
-			case '/concrete5-cif/features':
-			case '/concrete5-cif/flag_types':
-			case '/concrete5-cif/gatheringitemtemplatetypes':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block/data/record':
-			case '/concrete5-cif/pages/page/area/blocks';
-			case '/concrete5-cif/pages/page/area/style';
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/block':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/blocks/block';
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area/style':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block/data/record':
-			case '/concrete5-cif/sociallinks':
-			case '/concrete5-cif/stacks/stack/area/block/data/record':
-			case '/concrete5-cif/stacks/stack/area/blocks/block';
-				// Skip this node and its children
-				return;
-			case '/concrete5-cif/pages/page/area/block':
-			case '/concrete5-cif/pages/page/area/block/arealayout/columns/column/block':
-			case '/concrete5-cif/pagetypes/pagetype':
-			case '/concrete5-cif/pagetypes/pagetype/composer/items/block':
-			case '/concrete5-cif/pagetypes/pagetype/page/area/block':
-			case '/concrete5-cif/stacks/stack':
-			case '/concrete5-cif/stacks/stack/area':
-			case '/concrete5-cif/stacks/stack/area/block':
-			case '/concrete5-cif/systemcaptcha/library':
-			case '/concrete5-cif/workflowtypes/workflowtype':
-				// Translatable text: name attribute
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
-				break;
-			case '/styles/set':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'StyleSetName' : '');
-				break;
-			case '/styles/set/style':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'StyleName' : '');
-				break;
-			case '/concrete5-cif/attributekeys/attributekey':
-				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeKeyName' : '');
-				break;
-			case '/concrete5-cif/attributekeys/attributekey/tree':
-				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TreeName' : '');
-				break;
-			case '/concrete5-cif/thumbnailtypes/thumbnailtype':
-				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ThumbnailTypeName' : '');
-				break;
-			case '/concrete5-cif/trees/tree/topic_category':
-				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TopicCategoryName' : '');
-				break;
-			case '/concrete5-cif/trees/tree/topic':
-			case '/concrete5-cif/trees/tree/topic_category/topic':
-				// Translatable text: name attribute (it's a concrete5 attribute key name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'TopicName' : '');
-				break;
-			case '/concrete5-cif/attributesets/attributeset':
-				// Translatable text: name attribute (it's a concrete5 attribute set name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeSetName' : '');
-				break;
-			case '/concrete5-cif/attributetypes/attributetype':
-				// Translatable text: name attribute (it's a concrete5 attribute type name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AttributeTypeName' : '');
-				break;
-			case '/concrete5-cif/permissionaccessentitytypes/permissionaccessentitytype':
-				// Translatable text: name attribute (it's a concrete5 access entity type name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PermissionAccessEntityTypeName' : '');
-				break;
-			case '/concrete5-cif/systemcontenteditorsnippets/snippet':
-				// Translatable text: name attribute (it's a concrete5 system content editor snippet name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'SystemContentEditorSnippetName' : '');
-				break;
-			case '/concrete5-cif/blocktypesets/blocktypeset':
-				// Translatable text: a concrete5 block type set name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'BlockTypeSetName' : '');
-				break;
-			case '/concrete5-cif/composercontroltypes/type':
-				// Translatable text: a concrete5 ComposerControlType name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ComposerControlTypeName' : '');
-				break;
-			case '/concrete5-cif/gatheringsources/gatheringsource':
-				// Translatable text: a concrete5 GatheringDataSource name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'GatheringDataSourceName' : '');
-				break;
-			case '/concrete5-cif/gatheringitemtemplates/gatheringitemtemplate':
-				// Translatable text: a concrete5 GatheringItemTemplate name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'GatheringItemTemplateName' : '');
-				break;
-			case '/concrete5-cif/conversationeditors/editor':
-				// Translatable text: a concrete5 ConversationEditor name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ConversationEditorName' : '');
-				break;
-			case '/concrete5-cif/conversationratingtypes/conversationratingtype':
-				// Translatable text: a concrete5 ConversationRatingType name
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ConversationRatingTypeName' : '');
-				break;
-			case '/concrete5-cif/pages/page':
-			case '/concrete5-cif/pagetypes/pagetype/page':
-			case '/concrete5-cif/singlepages/page':
-			case '/concrete5-cif/taskpermissions/taskpermission':
-				// Translatable text: name attribute, description attribute
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries);
-				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries);
-				break;
-			case '/concrete5-cif/permissionkeys/permissionkey':
-				// Translatable text: name attribute (it's a concrete5 permission key name), description attribute (it's a concrete5 permission key description)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PermissionKeyName' : '');
-				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, $xmlContexts ? 'PermissionKeyDescription' : '');
-				break;
-			case '/concrete5-cif/pages/page/area/block/data/record':
-				// Skip this node and *almost* all its children
-				$childnodesLimit = array('title');
-				break;
-			case '/concrete5-cif/pages/page/area/block/data/record/title':
-				// Translatable text: node value
-				self::ReadNodeValue($filenameRel, $node, $entries);
-				break;
-			case '/concrete5-cif/pagefeeds/feed':
-				// Skip this node and *almost* all its children
-				$childnodesLimit = array('title', 'description');
-				break;
-			case '/concrete5-cif/pagefeeds/feed/title':
-				// Translatable text: node value
-				self::ReadNodeValue($filenameRel, $node, $entries, 'FeedTitle');
-				break;
-			case '/concrete5-cif/pagefeeds/feed/description':
-				// Translatable text: node value
-				self::ReadNodeValue($filenameRel, $node, $entries, 'FeedDescription');
-				break;
-			case '/concrete5-cif/singlepages/page/attributes/attributekey/value':
-				switch($node->parentNode->getAttribute('handle')) {
-					case 'meta_keywords':
-						self::ReadPageKeywords($filenameRel, $node->parentNode->parentNode->parentNode->getAttribute('path'), $node, $entries);
-						break;
-				}
-				break;
-			case '/concrete5-cif/jobsets/jobset':
-				// Translatable text: name attribute (it's a concrete5 job set name)
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'JobSetName' : '');
-				break;
-			case '/concrete5-cif/pages/page/area':
-			case '/concrete5-cif/pagetypes/pagetype/composer/output/pagetemplate/page/area':
-			case '/concrete5-cif/pagetypes/pagetype/page/area':
-			case '/concrete5-cif/singlepages/page/area':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'AreaName' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/output/pagetemplate/page':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTemplatePageName' : '');
-				self::ReadNodeAttribute($filenameRel, $node, 'description', $entries, $xmlContexts ? 'PageTemplatePageDescription' : '');
-				break;
-			case '/concrete5-cif/attributekeys/attributekey/type/options/option':
-				$attributeKeyType = $node/*option*/->parentNode/*options*/->parentNode/*type*/->parentNode/*attributekey*/->getAttribute('type');
-				switch(strlen($attributeKeyType) ? strval($attributeKeyType) : '') {
-					case 'select':
-						self::ReadNodeAttribute($filenameRel, $node, 'value', $entries, $xmlContexts ? 'SelectAttributeValue' : '');
-						break;
-				}
-				break;
-			case '/concrete5-cif/pagetemplates/pagetemplate':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTemplateName' : '');
-				break;
-			case '/concrete5-cif/imageeditor_controlsets/imageeditor_controlset':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorControlSetName' : '');
-				break;
-			case '/concrete5-cif/imageeditor_components/imageeditor_component':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorComponentName' : '');
-				break;
-			case '/concrete5-cif/imageeditor_filters/imageeditor_filter':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'ImageEditorFilterName' : '');
-				break;
-			case '/concrete5-cif/pagetypepublishtargettypes/type':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypePublishTargetTypeName' : '');
-				break;
-			case '/concrete5-cif/pagetypecomposercontroltypes/type':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerControlTypeName' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/formlayout/set':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeFormLayoutSetName' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/formlayout/set':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeFormLayoutSetName' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set':
-				self::ReadNodeAttribute($filenameRel, $node, 'name', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetName' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/formlayout/set/control':
-				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeFormLayoutSetControlCustomLabel' : '');
-				break;
-			case '/concrete5-cif/pagetypes/pagetype/composer/formlayout/set/control':
-				self::ReadNodeAttribute($filenameRel, $node, 'custom-label', $entries, $xmlContexts ? 'PageTypeComposerFormLayoutSetControlCustomLabel' : '');
-				break;
-			case '/concrete5-cif/pages/page/attributes/attributekey/topics/topic':
-				// Translatable text: node value
-				self::ReadNodeValue($filenameRel, $node, $entries, 'Topic');
-				break;
-			default:
-				throw new Exception('Unknown tag name ' . $path . ' in ' . $filenameRel . "\n\nNode:\n" . $node->ownerDocument->saveXML($node));
-		}
-		if($node->hasChildNodes()) {
-			foreach($node->childNodes as $child) {
-				if((!$childnodesLimit) || (is_a($child, 'DOMElement') && array_search($child->tagName, $childnodesLimit) !== false)) {
-					self::ParseXmlNode($filenameRel, $path, $child, $entries, $xmlContexts);
-				}
-			}
-		}
-	}
-
-	/** Parse a node attribute and create a POEntry item if it has a value.
-	* @param string $filenameRel The relative file name of the xml file being read.
-	* @param DOMNode $node The current node.
-	* @param string $attributeName The name of the attribute.
-	* @param ref array[POEntry] $entries Will be populated with found entries.
-	* @param string $context [default: ''] The translation context
-	*/
-	private static function ReadNodeAttribute($filenameRel, $node, $attributeName, &$entries, $context = '') {
-		$value = $node->getAttribute($attributeName);
-		if(strlen($value)) {
-			$key = strlen($context) ? "$context\x04$value" : $value;
-			if(!array_key_exists($key, $entries)) {
-				$entries[$key] = new POEntrySingle($value, array(), array(), $context);
-			}
-			$entries[$key]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
-		}
-	}
-
-	/** Parse a node value and create a POEntry item if it has a value.
-	* @param string $filenameRel The relative file name of the xml file being read.
-	* @param DOMNode $node The current node.
-	* @param ref array[POEntry] $entries Will be populated with found entries.
-	* @param string $context [default: ''] The translation context
-	*/
-	private static function ReadNodeValue($filenameRel, $node, &$entries, $context = '') {
-		$value = $node->nodeValue;
-		if(strlen($value)) {
-			$key = strlen($context) ? "$context\x04$value" : $value;
-			if(!array_key_exists($key, $entries)) {
-				$entries[$key] = new POEntrySingle($value, array(), array(), $context);
-			}
-			$entries[$key]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
-		}
-	}
-
-	/** Parse a node attribute which contains the keywords for a page.
-	* @param string $filenameRel The relative file name of the xml file being read.
-	* @param string $pageUrl The url of the page for which the keywords are for.
-	* @param DOMNode $node The current node.
-	* @param string $attributeName The name of the attribute.
-	* @param ref array[POEntry] $entries Will be populated with found entries.
-	*/
-	private static function ReadPageKeywords($filenameRel, $pageUrl, $node, &$entries) {
-		$keywords = $node->nodeValue;
-		if(strlen($keywords)) {
-			$comment = "#. Keywords for page $pageUrl";
-			if(array_key_exists($keywords, $entries)) {
-				$entries[$keywords]->Comments[] = $comment;
-			}
-			else {
-				$entries[$keywords] = new POEntrySingle($keywords, array(), array($comment));
-			}
-			$entries[$keywords]->Comments[] = '#: ' . str_replace('\\', '/', $filenameRel) . ':' . $node->getLineNo();
-		}
-	}
-
-	/** Merge an instance of a POEntry with this (they must be equal, only comments may differ).
-	* @param POEntry $poEntry The entry to be merged.
-	*/
-	public function MergeWith($poEntry) {
-		$this->Comments = array_merge($this->Comments, $poEntry->Comments);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgctxt', $this->MsgCtxt, true);
 	}
 
 	/** Read the next POEntry from the lines of the .po file.
@@ -2817,12 +1980,11 @@ class POEntrySingle extends POEntry {
 
 	/** Save the instance data to file.
 	* @param resource $hFile The file to save the data to.
-	* @param bool $indent Set to true to indent data, false otherwise (default: false).
 	*/
-	public function SaveTo($hFile, $indent = false) {
-		parent::_saveTo($hFile, $indent);
-		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId, $indent);
-		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgstr', $this->MsgStr, $indent);
+	public function SaveTo($hFile) {
+		parent::_saveTo($hFile);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgstr', $this->MsgStr);
 	}
 
 	/** Retrieves a string that uniquely identifies the entry.
@@ -2933,14 +2095,13 @@ class POEntryPlural extends POEntry {
 
 	/** Save the instance data to file.
 	* @param resource $hFile The file to save the data to.
-	* @param bool $indent Set to true to indent data, false otherwise (default: false).
 	*/
-	public function SaveTo($hFile, $indent = false) {
-		parent::_saveTo($hFile, $indent = false);
-		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId, $indent);
-		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid_plural', $this->MsgIdPlural, $indent);
+	public function SaveTo($hFile) {
+		parent::_saveTo($hFile);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid', $this->MsgId);
+		self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', 'msgid_plural', $this->MsgIdPlural);
 		for($i = 0; $i < count($this->MsgStr); $i++) {
-			self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', "msgstr[$i]", $this->MsgStr[$i], $indent);
+			self::ArrayToFile($hFile, $this->IsDeleted ? '#~ ' : '', "msgstr[$i]", $this->MsgStr[$i]);
 		}
 	}
 

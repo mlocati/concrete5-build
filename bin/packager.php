@@ -1,7 +1,8 @@
+#!/usr/bin/php
 <?php
 define('C5_BUILD', true);
-define('PHP_MIN_VERSION', '5.2.2');
-require_once dirname(__FILE__) . '/base.php';
+
+require_once dirname(__FILE__) . '/../src/base.php';
 
 $tempFiles = array();
 try {
