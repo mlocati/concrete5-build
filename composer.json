@@ -4,6 +4,6 @@
     },
     "require": {
         "php": ">=5.3",
-        "mlocati/concrete5-translation-library": "1.*"
+        "mlocati/concrete5-translation-library": "1.1.0"
     }
 }
