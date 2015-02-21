@@ -1209,7 +1209,13 @@ class POTFile extends POxFile {
 		foreach(\C5TL\Parser::getAllParsers() as $parser) {
 			if($parser->canParseDirectory()) {
 				Console::Write('  Running parser "' . $parser->getParserName() . '"... ');
-				$parser->parseDirectory(Enviro::MergePath(Options::$WebrootFolder, $packageInfo->DirectoryToPotify) , $packageInfo->DirectoryToPotify, $translations);
+				$parser->parseDirectory(
+					Enviro::MergePath(Options::$WebrootFolder, $packageInfo->DirectoryToPotify),
+					$packageInfo->DirectoryToPotify,
+					$translations,
+					false,
+					$packageInfo->IsConcrete5 ? true : false
+				);
 				Console::WriteLine('done.');
 			}
 		}
