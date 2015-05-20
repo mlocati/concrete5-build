@@ -12,7 +12,7 @@ try {
 		Options::CheckWebRoot();
 		foreach(ToolOptions::$Packages as $package) {
 			if($package->CreatePot) {
-				POTFile::CreateNew($package);
+				POTFile::CreateNew($package, ToolOptions::$Exclude3rdParty);
 			}
 			$languages = ToolOptions::getLanguages($package);
 			if($package->CreatePo) {
@@ -73,12 +73,18 @@ class ToolOptions {
 	*/
 	private static $InitializeData;
 
+	/** Defines if we want to ignore "vendor" and "3rdparty" when scanning our files
+	 * @var bool
+	 */
+	public static $Exclude3rdParty;
+
 	/** Initialize the default options. */
 	public static function InitializeDefaults() {
 		self::$PotContactConcrete5Default = 'http://www.concrete5.org/developers/bugs/';
 		self::$Packages = array();
 		self::$Languages = array();
 		self::$Interactive = false;
+		self::$Exclude3rdParty = false;
 		self::$InitializeData = array(
 			'packagesMap' => array(),
 			'currentPackage' => self::$Packages[] = new PackageInfo('')
@@ -116,6 +122,7 @@ class ToolOptions {
 		$options['--compile'] = array('helpValue' => '<yes|no>', 'description' => '(For core and/or each package) set to yes to generate the .mo files from .po files, no to skip it (defaults to yes, except for concrete5 when you\'ve specified a --package option)');
 		$options['--potname'] = array('helpValue' => '<filename>', 'description' => '(For core and/or each package) name of the .pot filename (just the name, without path: it\'ll be saved in the \'languages\' folder)');
 		$options['--potcontact'] = array('helpValue' => '<email|url>', 'description' => '(For core and/or each package) email address or URL to send bugs to (for concrete5 the default is ' . self::$PotContactConcrete5Default . ' when working on concrete5, empty when working on a package.');
+		$options['--exclude3rdParty'] = array('description' => 'Add this parameter to ignore the directories "vendor" and "3rdparty"');
 	}
 
 	/** Shows some examples. */
@@ -148,6 +155,9 @@ class ToolOptions {
 				die(0);
 			case '--interactive':
 				self::$Interactive = true;
+				return true;
+			case '--exclude3rdparty':
+				self::$Exclude3rdParty = true;
 				return true;
 			case '--package':
 				if(!strlen($value)) {
@@ -1201,7 +1211,7 @@ class POTFile extends POxFile {
 	* @param PackageInfo $packageInfo The info about the .pot file to be created (it'll be overwritten if already existing).
 	* @throws Exception Throws an Exception in case of errors.
 	*/
-	public static function CreateNew($packageInfo) {
+	public static function CreateNew($packageInfo, $exclude3rdParty = false) {
 		Console::WriteLine('* CREATING .POT FILE ' . $packageInfo->PotName . ' FOR ' . ($packageInfo->IsConcrete5 ? 'concrete5 core' : $packageInfo->Package) . ' v' . $packageInfo->Version);
 	
 		$translations = new \Gettext\Translations();
@@ -1214,7 +1224,7 @@ class POTFile extends POxFile {
 					$packageInfo->DirectoryToPotify,
 					$translations,
 					false,
-					$packageInfo->IsConcrete5 ? true : false
+					$exclude3rdParty ?: ($packageInfo->IsConcrete5 ? true : false)
 				);
 				Console::WriteLine('done.');
 			}
