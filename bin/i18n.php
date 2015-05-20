@@ -141,7 +141,7 @@ class ToolOptions {
 					Console::WriteLine("$id\t{$info['name']}");
 				}
 				die(0);
-			case 'countries':
+			case '--list-countries':
 				foreach(Language::GetCountries() as $id => $info) {
 					Console::WriteLine("$id\t{$info['name']}");
 				}
