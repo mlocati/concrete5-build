@@ -1,31 +1,39 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "adb932ac68601aefbd553c4318a6e57d",
+    "hash": "4203846f834daae1c97e620f31b0b4c5",
     "packages": [
         {
             "name": "gettext/gettext",
-            "version": "v3.3",
+            "version": "v3.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oscarotero/Gettext.git",
-                "reference": "3addf67466e8ab129b8a5b15ad374c3d1a9359b3"
+                "reference": "6d8fae62ce7df8676a351dfa5728c8f87f20ef53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/3addf67466e8ab129b8a5b15ad374c3d1a9359b3",
-                "reference": "3addf67466e8ab129b8a5b15ad374c3d1a9359b3",
+                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/6d8fae62ce7df8676a351dfa5728c8f87f20ef53",
+                "reference": "6d8fae62ce7df8676a351dfa5728c8f87f20ef53",
                 "shasum": ""
             },
             "require": {
                 "gettext/languages": "2.*",
                 "php": ">=5.3.0"
             },
+            "require-dev": {
+                "illuminate/view": "*",
+                "phpunit/phpunit": "~4.0",
+                "twig/extensions": "*",
+                "twig/twig": "*"
+            },
             "suggest": {
-                "illuminate/view": "Is necessary if you want use the Blade extractor"
+                "illuminate/view": "Is necessary if you want to use the Blade extractor",
+                "twig/extensions": "Is necessary if you want to use the Twig extractor",
+                "twig/twig": "Is necessary if you want to use the Twig extractor"
             },
             "type": "library",
             "autoload": {
@@ -55,20 +63,20 @@
                 "po",
                 "translation"
             ],
-            "time": "2015-02-16 11:52:19"
+            "time": "2015-04-28 17:50:01"
         },
         {
             "name": "gettext/languages",
-            "version": "v2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mlocati/cldr-to-gettext-plural-rules.git",
-                "reference": "7ea1b22590480e21950ab15ef7f56090153d3d21"
+                "reference": "c43ade7e3fb68bcf2379036513dce8d20553d9c8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mlocati/cldr-to-gettext-plural-rules/zipball/7ea1b22590480e21950ab15ef7f56090153d3d21",
-                "reference": "7ea1b22590480e21950ab15ef7f56090153d3d21",
+                "url": "https://api.github.com/repos/mlocati/cldr-to-gettext-plural-rules/zipball/c43ade7e3fb68bcf2379036513dce8d20553d9c8",
+                "reference": "c43ade7e3fb68bcf2379036513dce8d20553d9c8",
                 "shasum": ""
             },
             "require": {
@@ -109,24 +117,24 @@
                 "translations",
                 "unicode"
             ],
-            "time": "2015-02-24 09:33:40"
+            "time": "2015-03-27 11:32:41"
         },
         {
             "name": "mlocati/concrete5-translation-library",
-            "version": "1.3.2",
+            "version": "1.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mlocati/concrete5-translation-library.git",
-                "reference": "cec2c3f46b23c1bbaa775d21286eadc44632c87e"
+                "reference": "93997c7e229119a8c98ba7e02712b02eae82a560"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mlocati/concrete5-translation-library/zipball/cec2c3f46b23c1bbaa775d21286eadc44632c87e",
-                "reference": "cec2c3f46b23c1bbaa775d21286eadc44632c87e",
+                "url": "https://api.github.com/repos/mlocati/concrete5-translation-library/zipball/93997c7e229119a8c98ba7e02712b02eae82a560",
+                "reference": "93997c7e229119a8c98ba7e02712b02eae82a560",
                 "shasum": ""
             },
             "require": {
-                "gettext/gettext": "3.3.*",
+                "gettext/gettext": "3.4.*",
                 "php": ">=5.3.0"
             },
             "type": "library",
@@ -159,7 +167,7 @@
                 "translate",
                 "translation"
             ],
-            "time": "2015-03-09 08:49:21"
+            "time": "2015-05-21 07:27:56"
         }
     ],
     "packages-dev": [],
